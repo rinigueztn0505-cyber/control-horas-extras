@@ -1,0 +1,769 @@
+/* =========================================
+   1. CONFIGURACIÓN GENERAL
+========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #10243e, #1d4e75);
+    min-height: 100vh;
+    color: #263445;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+
+/* =========================================
+   2. INICIO DE SESIÓN
+========================================= */
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+}
+
+.login-card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 430px;
+    padding: 40px 35px;
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    width: 65px;
+    height: 65px;
+    margin: 0 auto 18px;
+    background-color: #174a73;
+    color: #ffffff;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.login-header h1 {
+    font-size: 24px;
+    color: #173b5c;
+    margin-bottom: 12px;
+}
+
+.login-header p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #718096;
+}
+
+
+/* =========================================
+   3. FORMULARIOS GENERALES
+========================================= */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #344256;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #d5dde7;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #263445;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #2476b5;
+    box-shadow: 0 0 0 3px rgba(36, 118, 181, 0.12);
+}
+
+.form-group textarea {
+    resize: vertical;
+    line-height: 1.5;
+    min-height: 85px;
+}
+
+
+/* =========================================
+   4. BOTÓN DE INICIO DE SESIÓN
+========================================= */
+
+#login-button {
+    width: 100%;
+    padding: 14px;
+    background-color: #174f7b;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-size: 15px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#login-button:hover {
+    background-color: #103957;
+}
+
+#login-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   5. MENSAJES
+========================================= */
+
+.login-message {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 13px;
+    color: #c0392b;
+}
+
+.form-message {
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.form-message.error {
+    color: #c0392b;
+}
+
+.form-message.success {
+    color: #247a45;
+}
+
+.form-message.info {
+    color: #2476b5;
+}
+
+
+/* =========================================
+   6. PIE DE PÁGINA DEL LOGIN
+========================================= */
+
+.login-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e8edf2;
+}
+
+.login-footer p {
+    font-size: 12px;
+    color: #8492a3;
+    line-height: 1.8;
+}
+
+
+/* =========================================
+   7. PANEL PRINCIPAL
+========================================= */
+
+.dashboard-container {
+    min-height: 100vh;
+    background-color: #f3f6fa;
+}
+
+.dashboard-header {
+    background-color: #173b5c;
+    color: #ffffff;
+    padding: 22px 35px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.dashboard-header h1 {
+    font-size: 23px;
+    margin-bottom: 6px;
+}
+
+.dashboard-header p {
+    font-size: 14px;
+    color: #d2e0ed;
+}
+
+#logout-button {
+    padding: 11px 18px;
+    background-color: #ffffff;
+    color: #173b5c;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#logout-button:hover {
+    background-color: #e5edf5;
+}
+
+
+/* =========================================
+   8. BIENVENIDA DEL USUARIO
+========================================= */
+
+.welcome-section {
+    padding: 30px 35px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e7ef;
+}
+
+.welcome-section h2 {
+    font-size: 22px;
+    color: #173b5c;
+    margin-bottom: 8px;
+}
+
+.welcome-section p {
+    color: #718096;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   9. CONTENEDORES DE MÓDULOS
+========================================= */
+
+.dashboard-content {
+    margin: 30px 35px;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-content h2 {
+    color: #173b5c;
+    font-size: 19px;
+    margin-bottom: 12px;
+}
+
+.dashboard-content p {
+    color: #718096;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+#technician-management-section,
+#hours-module {
+    margin-bottom: 25px;
+}
+
+
+/* =========================================
+   10. ENCABEZADOS DE MÓDULOS
+========================================= */
+
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.module-header h2 {
+    margin-bottom: 8px;
+}
+
+.module-header p {
+    margin-bottom: 0;
+}
+
+
+/* =========================================
+   11. FORMULARIO DE TÉCNICOS
+========================================= */
+
+#technician-form-container,
+#hours-form-container {
+    margin-top: 25px;
+    padding: 25px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e7ef;
+    border-radius: 9px;
+}
+
+#technician-form-container h3,
+#hours-form-container h3,
+.technician-list h3,
+.hours-list h3 {
+    color: #173b5c;
+    font-size: 17px;
+    margin-bottom: 20px;
+}
+
+
+/* =========================================
+   12. FORMULARIO DE HORAS EXTRAS
+========================================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+#hours-form .form-group {
+    margin-bottom: 20px;
+}
+
+#hours-form input[type="date"],
+#hours-form input[type="time"] {
+    min-height: 43px;
+}
+
+
+/* =========================================
+   13. BOTONES DE LOS MÓDULOS
+========================================= */
+
+.technician-form-actions,
+.hours-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.technician-form-actions button,
+.hours-form-actions button,
+#show-technician-form,
+#save-technician-button,
+#save-hours-button {
+    padding: 12px 18px;
+    background-color: #174f7b;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.technician-form-actions button:hover,
+.hours-form-actions button:hover,
+#show-technician-form:hover,
+#save-technician-button:hover,
+#save-hours-button:hover {
+    background-color: #103957;
+}
+
+#cancel-technician-button,
+#reset-hours-button {
+    background-color: #e4eaf0;
+    color: #344256;
+}
+
+#cancel-technician-button:hover,
+#reset-hours-button:hover {
+    background-color: #d2dce7;
+}
+
+
+/* =========================================
+   14. LISTADOS DE TÉCNICOS Y HORAS
+========================================= */
+
+.technician-list,
+.hours-list {
+    margin-top: 30px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+}
+
+.table-container table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    background-color: #ffffff;
+}
+
+.table-container th,
+.table-container td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e8edf2;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.table-container th {
+    background-color: #edf3f8;
+    color: #173b5c;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.table-container td {
+    color: #465568;
+    vertical-align: middle;
+}
+
+.table-container tbody tr:hover {
+    background-color: #f7f9fc;
+}
+
+.table-container tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================
+   15. TABLA DE HORAS EXTRAS
+========================================= */
+
+#hours-table-body td {
+    vertical-align: top;
+}
+
+#hours-table-body td:nth-child(2) {
+    min-width: 160px;
+}
+
+#hours-table-body td:nth-child(3),
+#hours-table-body td:nth-child(4) {
+    white-space: nowrap;
+}
+
+#hours-table-body td:nth-child(6) {
+    min-width: 220px;
+    white-space: normal;
+}
+
+
+/* =========================================
+   16. RESUMEN DE HORAS POR TÉCNICO
+========================================= */
+
+.hours-summary {
+    margin: 25px 0;
+    padding: 22px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e7ef;
+    border-radius: 9px;
+}
+
+.hours-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.hours-summary-header h3 {
+    color: #173b5c;
+    font-size: 17px;
+    margin: 0;
+}
+
+.hours-summary-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.hours-summary-filters label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #344256;
+}
+
+.hours-summary-filters select {
+    min-width: 190px;
+    padding: 10px 12px;
+    border: 1px solid #d5dde7;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #263445;
+    font-size: 13px;
+}
+
+.hours-summary-table {
+    width: 100%;
+    min-width: 450px;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.hours-summary-table th,
+.hours-summary-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e8edf2;
+    text-align: left;
+    font-size: 13px;
+}
+
+.hours-summary-table th {
+    background-color: #edf3f8;
+    color: #173b5c;
+}
+
+.hours-summary-table td:last-child,
+.hours-summary-table th:last-child {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.hours-summary-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.hours-summary-table .total-row {
+    background-color: #edf3f8;
+    font-weight: bold;
+}
+
+.hours-summary-table .total-row td {
+    color: #173b5c;
+}
+
+
+/* =========================================
+   17. INDICADORES DE HORAS ACUMULADAS
+========================================= */
+
+.hours-total {
+    display: inline-block;
+    min-width: 85px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    background-color: #edf1f5;
+    color: #344256;
+}
+
+.hours-total.normal {
+    background-color: #edf1f5;
+    color: #344256;
+}
+
+.hours-total.warning {
+    background-color: #fff1bd;
+    color: #805b00;
+    border: 1px solid #f2d675;
+}
+
+.hours-total.danger {
+    background-color: #fbdada;
+    color: #a12626;
+    border: 1px solid #e9a5a5;
+}
+
+
+/* Indicador del total del técnico */
+
+.technician-hours-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e7ef;
+    border-radius: 9px;
+}
+
+.technician-hours-card p {
+    margin: 0;
+    color: #344256;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.technician-hours-card .hours-total {
+    font-size: 18px;
+    min-width: 110px;
+    padding: 12px 18px;
+}
+
+
+/* =========================================
+   18. ADAPTACIÓN PARA TABLETS
+========================================= */
+
+@media (max-width: 900px) {
+
+    .dashboard-header {
+        padding: 22px;
+    }
+
+    .welcome-section {
+        padding: 25px 22px;
+    }
+
+    .dashboard-content {
+        margin: 22px;
+        padding: 22px;
+    }
+
+}
+
+
+/* =========================================
+   19. ADAPTACIÓN PARA CELULARES
+========================================= */
+
+@media (max-width: 700px) {
+
+    .login-card {
+        padding: 30px 22px;
+    }
+
+    .login-header h1 {
+        font-size: 21px;
+    }
+
+    .dashboard-header {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .welcome-section {
+        padding: 25px 20px;
+    }
+
+    .dashboard-content {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .module-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    #technician-form-container,
+    #hours-form-container {
+        padding: 18px;
+    }
+
+    .technician-form-actions,
+    .hours-form-actions {
+        flex-direction: column;
+    }
+
+    .technician-form-actions button,
+    .hours-form-actions button {
+        width: 100%;
+    }
+
+    #show-technician-form {
+        width: 100%;
+    }
+
+    .hours-summary {
+        padding: 16px;
+    }
+
+    .hours-summary-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .hours-summary-filters {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hours-summary-filters select {
+        width: 100%;
+    }
+
+    .technician-hours-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
+
+
+/* =========================================
+   20. CONTROL DE ELEMENTOS OCULTOS
+========================================= */
+
+[hidden] {
+    display: none !important;
+}
