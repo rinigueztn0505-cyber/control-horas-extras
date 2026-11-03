@@ -63,6 +63,7 @@ const activityDescriptionInput = document.getElementById("activity-description")
 const activityObservationsInput = document.getElementById("activity-observations");
 
 const saveHoursButton = document.getElementById("save-hours-button");
+const resetHoursButton = document.getElementById("reset-hours-button");
 const hoursMessage = document.getElementById("hours-message");
 const hoursTableBody = document.getElementById("hours-table-body");
 const hoursModuleDescription = document.getElementById("hours-module-description");
@@ -92,6 +93,12 @@ let perfilActual = null;
 let tecnicosCargados = [];
 let registrosCargados = [];
 let nombresUsuarios = new Map();
+
+// Registro que se está editando
+let registroEnEdicion = null;
+
+// Botón para cancelar la edición
+let cancelEditButton = null;
 
 
 // =========================================
@@ -160,7 +167,6 @@ function calcularHoras(inicio, fin) {
     let minutosInicio = horaInicio * 60 + minutoInicio;
     let minutosFin = horaFin * 60 + minutoFin;
 
-    // Si termina antes de iniciar, finaliza al día siguiente.
     if (minutosFin < minutosInicio) {
         minutosFin += 24 * 60;
     }
@@ -176,10 +182,96 @@ function calcularHoras(inicio, fin) {
 
 
 // =========================================
+// PREPARAR COLUMNA DE ACCIONES
+// =========================================
+
+function prepararColumnaAcciones() {
+
+    const tabla = hoursTableBody.closest("table");
+
+    if (!tabla) {
+        return;
+    }
+
+    const encabezado = tabla.querySelector("thead tr");
+
+    if (!encabezado) {
+        return;
+    }
+
+    const existeColumna = Array.from(encabezado.cells).some(
+        celda => celda.textContent.trim().toLowerCase() === "acciones"
+    );
+
+    if (!existeColumna) {
+
+        const nuevaColumna = document.createElement("th");
+
+        nuevaColumna.textContent = "Acciones";
+
+        encabezado.appendChild(nuevaColumna);
+    }
+}
+
+
+// =========================================
+// PREPARAR BOTÓN CANCELAR EDICIÓN
+// =========================================
+
+function prepararBotonCancelarEdicion() {
+
+    if (cancelEditButton) {
+        return;
+    }
+
+    cancelEditButton = document.createElement("button");
+
+    cancelEditButton.type = "button";
+    cancelEditButton.id = "cancel-edit-button";
+    cancelEditButton.textContent = "Cancelar edición";
+    cancelEditButton.hidden = true;
+
+    cancelEditButton.addEventListener("click", function () {
+
+        cancelarEdicionRegistro();
+    });
+
+    saveHoursButton.insertAdjacentElement(
+        "afterend",
+        cancelEditButton
+    );
+}
+
+
+// =========================================
+// RESTABLECER FORMULARIO DE HORAS
+// =========================================
+
+function restablecerFormularioHoras(mostrarFecha = true) {
+
+    hoursForm.reset();
+
+    registroEnEdicion = null;
+
+    saveHoursButton.textContent = "Registrar horas extras";
+
+    if (cancelEditButton) {
+        cancelEditButton.hidden = true;
+    }
+
+    hoursMessage.textContent = "";
+    hoursDeadlineMessage.textContent = "";
+
+    if (mostrarFecha) {
+        activityDateInput.value = obtenerFechaLocal();
+    }
+}
+
+
+// =========================================
 // FUNCIONES DEL RESUMEN DE HORAS
 // =========================================
 
-// Obtener el rango de fechas del mes seleccionado.
 function obtenerRangoMes(mesSeleccionado) {
 
     const [anio, mes] = mesSeleccionado.split("-").map(Number);
@@ -198,7 +290,6 @@ function obtenerRangoMes(mesSeleccionado) {
 }
 
 
-// Determinar el color del acumulado.
 function obtenerClaseHoras(total) {
 
     if (total >= 20) {
@@ -213,14 +304,12 @@ function obtenerClaseHoras(total) {
 }
 
 
-// Mostrar las horas con dos decimales.
 function formatearHoras(total) {
 
     return `${Number(total || 0).toFixed(2)} h`;
 }
 
 
-// Consultar las horas de un mes.
 async function obtenerRegistrosDelMes(mesSeleccionado) {
 
     const { fechaInicio, fechaFin } = obtenerRangoMes(mesSeleccionado);
@@ -271,13 +360,11 @@ async function cargarResumenAdministrador() {
 
         const acumulados = new Map();
 
-        // Inicializar todos los técnicos en cero.
         tecnicosCargados.forEach(function (tecnico) {
 
             acumulados.set(tecnico.id, 0);
         });
 
-        // Sumar las horas de cada técnico.
         registrosMes.forEach(function (registro) {
 
             const horasActuales = acumulados.get(registro.tecnico_id) || 0;
@@ -425,7 +512,6 @@ async function actualizarResumenHoras() {
 // CALCULAR PLAZO DEL CASO
 // =========================================
 
-// Último día permitido: fecha de generación + 2 días.
 function calcularFechaLimite(fechaGeneracion) {
 
     if (!fechaGeneracion) {
@@ -438,7 +524,6 @@ function calcularFechaLimite(fechaGeneracion) {
 }
 
 
-// El bloqueo comienza a las 00:00 del tercer día posterior.
 function calcularInicioVencimiento(fechaGeneracion) {
 
     if (!fechaGeneracion) {
@@ -519,7 +604,6 @@ function actualizarMensajePlazo() {
 }
 
 
-// Actualizar el mensaje cuando cambia la fecha de generación.
 caseGenerationDateInput.addEventListener(
     "change",
     actualizarMensajePlazo
@@ -584,9 +668,7 @@ async function cargarTecnicos() {
         techniciansTableBody.appendChild(fila);
     });
 
-    // Actualizar los selectores de técnicos.
     actualizarFiltroTecnicos();
-
 }
 
 
@@ -664,7 +746,6 @@ function actualizarFiltroTecnicos() {
         hoursTechnicianFilter.appendChild(opcion);
     });
 
-    // Mantener la selección si el técnico todavía existe.
     if (
         valorAnterior &&
         tecnicosCargados.some(tecnico => tecnico.id === valorAnterior)
@@ -989,7 +1070,232 @@ hoursTechnicianFilter.addEventListener("change", function () {
 
 
 // =========================================
-// REGISTRAR HORAS EXTRAS
+// EDITAR REGISTRO
+// =========================================
+
+async function iniciarEdicionRegistro(registro) {
+
+    const esAdministrador =
+        perfilActual?.rol === "administrador";
+
+    const esTecnico =
+        perfilActual?.rol === "tecnico";
+
+    if (!esAdministrador && !esTecnico) {
+        return;
+    }
+
+    // El técnico solo puede editar sus propios registros registrados.
+    if (
+        esTecnico &&
+        (
+            registro.tecnico_id !== usuarioActual.id ||
+            registro.estado !== "registrada"
+        )
+    ) {
+
+        mostrarMensaje(
+            hoursMessage,
+            "No tiene permisos para editar este registro."
+        );
+
+        return;
+    }
+
+    registroEnEdicion = registro;
+
+    // Cargar los datos del registro en el formulario.
+    caseNumberInput.value = registro.numero_caso || "";
+    caseGenerationDateInput.value =
+        registro.fecha_generacion_caso || "";
+
+    activityDateInput.value =
+        registro.fecha_actividad || "";
+
+    startTimeInput.value =
+        String(registro.hora_inicio || "").slice(0, 5);
+
+    endTimeInput.value =
+        String(registro.hora_fin || "").slice(0, 5);
+
+    activityDescriptionInput.value =
+        registro.actividad || "";
+
+    activityObservationsInput.value =
+        registro.observaciones || "";
+
+    // El administrador puede cambiar el técnico destinatario.
+    if (esAdministrador) {
+
+        const tecnicoExiste = Array.from(
+            hoursTechnicianSelect.options
+        ).some(opcion => opcion.value === registro.tecnico_id);
+
+        // Si el técnico está inactivo, se agrega temporalmente
+        // para permitir editar su registro.
+        if (!tecnicoExiste) {
+
+            const opcion = document.createElement("option");
+
+            opcion.value = registro.tecnico_id;
+
+            opcion.textContent =
+                nombresUsuarios.get(registro.tecnico_id) ||
+                "Técnico del registro";
+
+            hoursTechnicianSelect.appendChild(opcion);
+        }
+
+        hoursTechnicianSelect.value = registro.tecnico_id;
+    }
+
+    saveHoursButton.textContent = "Guardar cambios";
+
+    prepararBotonCancelarEdicion();
+
+    cancelEditButton.hidden = false;
+
+    actualizarMensajePlazo();
+
+    mostrarMensaje(
+        hoursMessage,
+        `Editando el registro del caso ${registro.numero_caso || "sin número"}.`,
+        "info"
+    );
+
+    hoursFormContainer.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+// =========================================
+// CANCELAR EDICIÓN
+// =========================================
+
+function cancelarEdicionRegistro() {
+
+    restablecerFormularioHoras();
+
+    mostrarMensaje(
+        hoursMessage,
+        "Edición cancelada. El registro original no fue modificado.",
+        "info"
+    );
+}
+
+
+// =========================================
+// ELIMINAR REGISTRO
+// =========================================
+
+async function eliminarRegistro(registro) {
+
+    const esAdministrador =
+        perfilActual?.rol === "administrador";
+
+    const esTecnico =
+        perfilActual?.rol === "tecnico";
+
+    if (!esAdministrador && !esTecnico) {
+        return;
+    }
+
+    // El técnico solo puede eliminar sus propios registros registrados.
+    if (
+        esTecnico &&
+        (
+            registro.tecnico_id !== usuarioActual.id ||
+            registro.estado !== "registrada"
+        )
+    ) {
+
+        mostrarMensaje(
+            hoursMessage,
+            "No tiene permisos para eliminar este registro."
+        );
+
+        return;
+    }
+
+    const confirmacion = confirm(
+        `¿Está seguro de eliminar el registro del caso ${registro.numero_caso || "sin número"}?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmacion) {
+        return;
+    }
+
+    try {
+
+        mostrarMensaje(
+            hoursMessage,
+            "Eliminando registro...",
+            "info"
+        );
+
+        let consulta = supabase
+            .from("registros_horas_extras")
+            .delete()
+            .eq("id", registro.id);
+
+        // Filtro adicional de seguridad para el técnico.
+        if (esTecnico) {
+
+            consulta = consulta
+                .eq("tecnico_id", usuarioActual.id)
+                .eq("estado", "registrada");
+        }
+
+        const { data, error } = await consulta
+            .select("id");
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+
+            throw new Error(
+                "No se eliminó el registro. Verifique sus permisos o si el registro ya fue eliminado."
+            );
+        }
+
+        // Si se estaba editando el registro eliminado, limpiar formulario.
+        if (registroEnEdicion?.id === registro.id) {
+
+            restablecerFormularioHoras();
+        }
+
+        await cargarRegistrosHoras();
+
+        await actualizarResumenHoras();
+
+        mostrarMensaje(
+            hoursMessage,
+            `El registro del caso ${registro.numero_caso || "sin número"} fue eliminado correctamente.`,
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error eliminando registro:",
+            error
+        );
+
+        mostrarMensaje(
+            hoursMessage,
+            error.message ||
+            "No se pudo eliminar el registro."
+        );
+    }
+}
+
+
+// =========================================
+// REGISTRAR O ACTUALIZAR HORAS EXTRAS
 // =========================================
 
 hoursForm.addEventListener("submit", async function (event) {
@@ -1012,6 +1318,8 @@ hoursForm.addEventListener("submit", async function (event) {
     const esTecnico =
         perfilActual.rol === "tecnico";
 
+    const estaEditando = registroEnEdicion !== null;
+
     if (!esAdministrador && !esTecnico) {
 
         mostrarMensaje(
@@ -1022,18 +1330,35 @@ hoursForm.addEventListener("submit", async function (event) {
         return;
     }
 
-    // Datos del caso.
+    // Verificar nuevamente los permisos de edición.
+    if (estaEditando) {
+
+        if (
+            esTecnico &&
+            (
+                registroEnEdicion.tecnico_id !== usuarioActual.id ||
+                registroEnEdicion.estado !== "registrada"
+            )
+        ) {
+
+            mostrarMensaje(
+                hoursMessage,
+                "No tiene permisos para modificar este registro."
+            );
+
+            return;
+        }
+    }
+
     const numeroCaso = caseNumberInput.value.trim();
     const fechaGeneracion = caseGenerationDateInput.value;
 
-    // Datos de la actividad.
     const fechaActividad = activityDateInput.value;
     const horaInicio = startTimeInput.value;
     const horaFin = endTimeInput.value;
     const actividad = activityDescriptionInput.value.trim();
     const observaciones = activityObservationsInput.value.trim();
 
-    // Técnico destinatario.
     const tecnicoId = esAdministrador
         ? hoursTechnicianSelect.value
         : usuarioActual.id;
@@ -1068,8 +1393,10 @@ hoursForm.addEventListener("submit", async function (event) {
         return;
     }
 
-    // Validación del plazo para técnicos.
-    if (!esAdministrador) {
+    // Validación del plazo para nuevos registros de técnicos.
+    // Al editar se permite modificar un registro ya existente,
+    // aunque el plazo original haya vencido.
+    if (esTecnico && !estaEditando) {
 
         const fechaBloqueo =
             calcularInicioVencimiento(fechaGeneracion);
@@ -1111,11 +1438,16 @@ hoursForm.addEventListener("submit", async function (event) {
     }
 
     saveHoursButton.disabled = true;
-    saveHoursButton.textContent = "Guardando...";
+
+    saveHoursButton.textContent = estaEditando
+        ? "Actualizando..."
+        : "Guardando...";
 
     mostrarMensaje(
         hoursMessage,
-        "Guardando registro...",
+        estaEditando
+            ? "Actualizando registro..."
+            : "Guardando registro...",
         "info"
     );
 
@@ -1133,138 +1465,231 @@ hoursForm.addEventListener("submit", async function (event) {
             hora_fin: horaFin,
             total_horas: totalHoras,
 
-            tipo_jornada: "fuera_horario",
+            tipo_jornada: registroEnEdicion?.tipo_jornada ||
+                "fuera_horario",
 
             actividad,
-            ubicacion: null,
+            ubicacion: registroEnEdicion?.ubicacion || null,
             observaciones: observaciones || null,
 
-            estado: "registrada"
+            // Conservar el estado original al editar.
+            estado: estaEditando
+                ? registroEnEdicion.estado
+                : "registrada"
         };
 
-        const { data: registroGuardado, error } = await supabase
-            .from("registros_horas_extras")
-            .insert(nuevoRegistro)
-            .select("id")
-            .single();
+        if (estaEditando) {
 
-        if (error) {
-            throw error;
-        }
+            // =====================================
+            // ACTUALIZAR REGISTRO EXISTENTE
+            // =====================================
 
-        if (!registroGuardado?.id) {
-            throw new Error(
-                "El registro se guardó, pero no se recibió su identificador."
-            );
-        }
+            let consulta = supabase
+                .from("registros_horas_extras")
+                .update(nuevoRegistro)
+                .eq("id", registroEnEdicion.id);
 
-        // Procesar las notificaciones.
-        const respuestaAlertas = await supabase.functions.invoke(
-            "procesar-alertas-horas",
-            {
-                body: {
-                    registro_id: registroGuardado.id
-                }
+            // Seguridad adicional para el técnico.
+            if (esTecnico) {
+
+                consulta = consulta
+                    .eq("tecnico_id", usuarioActual.id)
+                    .eq("estado", "registrada");
             }
-        );
 
-        const resultadoAlertas = respuestaAlertas.data;
-        const errorProcesamientoAlertas = respuestaAlertas.error;
+            const { data: registroActualizado, error } =
+                await consulta
+                    .select("id")
+                    .single();
 
-        // Limpiar el formulario.
-        hoursForm.reset();
+            if (error) {
+                throw error;
+            }
 
-        activityDateInput.value = obtenerFechaLocal();
-        hoursDeadlineMessage.textContent = "";
+            if (!registroActualizado?.id) {
 
-        // Actualizar registros y resúmenes.
-        await cargarRegistrosHoras();
-        await actualizarResumenHoras();
+                throw new Error(
+                    "No se recibió confirmación de la actualización."
+                );
+            }
 
-        if (errorProcesamientoAlertas) {
+            restablecerFormularioHoras();
 
-            console.error(
-                "El registro se guardó, pero no se procesaron las alertas:",
-                errorProcesamientoAlertas
-            );
+            await cargarRegistrosHoras();
+
+            await actualizarResumenHoras();
 
             mostrarMensaje(
                 hoursMessage,
-                `El registro ${numeroCaso} se guardó correctamente con ${totalHoras.toFixed(2)} horas, pero no se pudieron procesar las notificaciones. Informe al administrador.`,
-                "info"
-            );
-
-        } else if (resultadoAlertas?.success === true) {
-
-            let mensajeFinal =
-                `Registro guardado correctamente. Caso: ${numeroCaso}. Total: ${totalHoras.toFixed(2)} horas.`;
-
-            if (
-                esAdministrador &&
-                resultadoAlertas.telegram
-            ) {
-
-                if (typeof resultadoAlertas.telegram.enviados === "number") {
-
-                    mensajeFinal +=
-                        ` Mensajes de Telegram enviados: ${resultadoAlertas.telegram.enviados}.`;
-
-                    if (resultadoAlertas.telegram.errores > 0) {
-                        mensajeFinal +=
-                            ` Mensajes con error: ${resultadoAlertas.telegram.errores}.`;
-                    }
-
-                } else if (typeof resultadoAlertas.telegram === "string") {
-
-                    mensajeFinal +=
-                        ` Telegram: ${resultadoAlertas.telegram}`;
-                }
-            }
-
-            mostrarMensaje(
-                hoursMessage,
-                mensajeFinal,
+                `El registro del caso ${numeroCaso} fue actualizado correctamente. No se generaron notificaciones nuevas.`,
                 "success"
-            );
-
-            console.log(
-                "Resultado del procesamiento de alertas:",
-                resultadoAlertas
             );
 
         } else {
 
-            console.error(
-                "Respuesta inesperada al procesar alertas:",
-                resultadoAlertas
+            // =====================================
+            // INSERTAR NUEVO REGISTRO
+            // =====================================
+
+            const { data: registroGuardado, error } = await supabase
+                .from("registros_horas_extras")
+                .insert(nuevoRegistro)
+                .select("id")
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            if (!registroGuardado?.id) {
+
+                throw new Error(
+                    "El registro se guardó, pero no se recibió su identificador."
+                );
+            }
+
+            // Procesar las notificaciones solamente
+            // cuando se crea un registro nuevo.
+            const respuestaAlertas = await supabase.functions.invoke(
+                "procesar-alertas-horas",
+                {
+                    body: {
+                        registro_id: registroGuardado.id
+                    }
+                }
             );
 
-            mostrarMensaje(
-                hoursMessage,
-                `El registro ${numeroCaso} se guardó, pero no se recibió una confirmación válida del procesamiento de alertas.`,
-                "info"
-            );
+            const resultadoAlertas = respuestaAlertas.data;
+            const errorProcesamientoAlertas = respuestaAlertas.error;
+
+            restablecerFormularioHoras();
+
+            await cargarRegistrosHoras();
+
+            await actualizarResumenHoras();
+
+            if (errorProcesamientoAlertas) {
+
+                console.error(
+                    "El registro se guardó, pero no se procesaron las alertas:",
+                    errorProcesamientoAlertas
+                );
+
+                mostrarMensaje(
+                    hoursMessage,
+                    `El registro ${numeroCaso} se guardó correctamente con ${totalHoras.toFixed(2)} horas, pero no se pudieron procesar las notificaciones. Informe al administrador.`,
+                    "info"
+                );
+
+            } else if (resultadoAlertas?.success === true) {
+
+                let mensajeFinal =
+                    `Registro guardado correctamente. Caso: ${numeroCaso}. Total: ${totalHoras.toFixed(2)} horas.`;
+
+                if (
+                    esAdministrador &&
+                    resultadoAlertas.telegram
+                ) {
+
+                    if (
+                        typeof resultadoAlertas.telegram.enviados === "number"
+                    ) {
+
+                        mensajeFinal +=
+                            ` Mensajes de Telegram enviados: ${resultadoAlertas.telegram.enviados}.`;
+
+                        if (resultadoAlertas.telegram.errores > 0) {
+
+                            mensajeFinal +=
+                                ` Mensajes con error: ${resultadoAlertas.telegram.errores}.`;
+                        }
+
+                    } else if (
+                        typeof resultadoAlertas.telegram === "string"
+                    ) {
+
+                        mensajeFinal +=
+                            ` Telegram: ${resultadoAlertas.telegram}`;
+                    }
+                }
+
+                mostrarMensaje(
+                    hoursMessage,
+                    mensajeFinal,
+                    "success"
+                );
+
+                console.log(
+                    "Resultado del procesamiento de alertas:",
+                    resultadoAlertas
+                );
+
+            } else {
+
+                console.error(
+                    "Respuesta inesperada al procesar alertas:",
+                    resultadoAlertas
+                );
+
+                mostrarMensaje(
+                    hoursMessage,
+                    `El registro ${numeroCaso} se guardó, pero no se recibió una confirmación válida del procesamiento de alertas.`,
+                    "info"
+                );
+            }
         }
 
     } catch (error) {
 
         console.error(
-            "Error guardando horas extras:",
+            "Error guardando o actualizando horas extras:",
             error
         );
 
         mostrarMensaje(
             hoursMessage,
             error.message ||
-            "No se pudo guardar el registro."
+            "No se pudo completar la operación."
         );
 
     } finally {
 
         saveHoursButton.disabled = false;
-        saveHoursButton.textContent = "Registrar horas extras";
+
+        saveHoursButton.textContent = registroEnEdicion
+            ? "Guardar cambios"
+            : "Registrar horas extras";
     }
 });
+
+
+// =========================================
+// BOTÓN LIMPIAR FORMULARIO
+// =========================================
+
+if (resetHoursButton) {
+
+    resetHoursButton.addEventListener("click", function () {
+
+        registroEnEdicion = null;
+
+        saveHoursButton.textContent = "Registrar horas extras";
+
+        if (cancelEditButton) {
+            cancelEditButton.hidden = true;
+        }
+
+        hoursMessage.textContent = "";
+        hoursDeadlineMessage.textContent = "";
+
+        // Esperar a que el navegador termine el reset nativo.
+        setTimeout(function () {
+
+            activityDateInput.value = obtenerFechaLocal();
+
+        }, 0);
+    });
+}
 
 
 // =========================================
@@ -1287,6 +1712,8 @@ async function cargarRegistrosHoras() {
             hora_inicio,
             hora_fin,
             total_horas,
+            tipo_jornada,
+            ubicacion,
             actividad,
             observaciones,
             estado
@@ -1306,7 +1733,7 @@ async function cargarRegistrosHoras() {
         crearCelda(
             fila,
             "No se pudieron cargar los registros."
-        ).colSpan = 10;
+        ).colSpan = 11;
 
         hoursTableBody.appendChild(fila);
 
@@ -1325,14 +1752,13 @@ async function cargarRegistrosHoras() {
             ? "Todavía no tienes registros de horas extras."
             : "Todavía no existen registros de horas extras.";
 
-        crearCelda(fila, mensaje).colSpan = 10;
+        crearCelda(fila, mensaje).colSpan = 11;
 
         hoursTableBody.appendChild(fila);
 
         return;
     }
 
-    // Consultar perfiles de técnicos y usuarios que registraron.
     const idsUsuarios = [
         ...new Set(
             registrosCargados.flatMap(registro => [
@@ -1375,6 +1801,8 @@ async function cargarRegistrosHoras() {
 
 function mostrarRegistrosEnTabla() {
 
+    prepararColumnaAcciones();
+
     hoursTableBody.innerHTML = "";
 
     let registros = [...registrosCargados];
@@ -1410,7 +1838,7 @@ function mostrarRegistrosEnTabla() {
             ? "Todavía no tienes registros de horas extras."
             : "No hay registros para el técnico seleccionado.";
 
-        crearCelda(fila, mensaje).colSpan = 10;
+        crearCelda(fila, mensaje).colSpan = 11;
 
         hoursTableBody.appendChild(fila);
 
@@ -1421,10 +1849,7 @@ function mostrarRegistrosEnTabla() {
 
         const fila = document.createElement("tr");
 
-        crearCelda(
-            fila,
-            registro.numero_caso || "—"
-        );
+        crearCelda(fila, registro.numero_caso || "—");
 
         crearCelda(
             fila,
@@ -1472,6 +1897,61 @@ function mostrarRegistrosEnTabla() {
             fila,
             registro.estado || "—"
         );
+
+        // =====================================
+        // BOTONES DE ACCIONES
+        // =====================================
+
+        const celdaAcciones = document.createElement("td");
+
+        const esAdministrador =
+            perfilActual?.rol === "administrador";
+
+        const esTecnicoPropietario =
+            perfilActual?.rol === "tecnico" &&
+            registro.tecnico_id === usuarioActual.id;
+
+        const puedeModificar =
+            esAdministrador ||
+            (
+                esTecnicoPropietario &&
+                registro.estado === "registrada"
+            );
+
+        if (puedeModificar) {
+
+            const botonEditar = document.createElement("button");
+
+            botonEditar.type = "button";
+            botonEditar.textContent = "Editar";
+            botonEditar.className = "action-button edit-button";
+
+            botonEditar.addEventListener("click", function () {
+
+                iniciarEdicionRegistro(registro);
+            });
+
+            celdaAcciones.appendChild(botonEditar);
+
+            const botonEliminar = document.createElement("button");
+
+            botonEliminar.type = "button";
+            botonEliminar.textContent = "Eliminar";
+            botonEliminar.className = "action-button delete-button";
+
+            botonEliminar.addEventListener("click", function () {
+
+                eliminarRegistro(registro);
+            });
+
+            celdaAcciones.appendChild(botonEliminar);
+
+        } else {
+
+            celdaAcciones.textContent = "—";
+        }
+
+        fila.appendChild(celdaAcciones);
 
         hoursTableBody.appendChild(fila);
     });
@@ -1577,6 +2057,9 @@ async function mostrarPanel() {
 
         technicianManagementSection.hidden = true;
     }
+
+    prepararColumnaAcciones();
+    prepararBotonCancelarEdicion();
 
     await configurarModuloHoras();
 
@@ -1709,6 +2192,8 @@ logoutButton.addEventListener("click", async function () {
     registrosCargados = [];
     nombresUsuarios.clear();
 
+    registroEnEdicion = null;
+
     mostrarLogin();
 
     loginForm.reset();
@@ -1734,6 +2219,12 @@ logoutButton.addEventListener("click", async function () {
     hoursMessage.textContent = "";
     hoursDeadlineMessage.textContent = "";
     hoursTableBody.textContent = "";
+
+    saveHoursButton.textContent = "Registrar horas extras";
+
+    if (cancelEditButton) {
+        cancelEditButton.hidden = true;
+    }
 
     adminSummaryTableBody.innerHTML = "";
     adminSummaryTotal.textContent = "0.00 h";
