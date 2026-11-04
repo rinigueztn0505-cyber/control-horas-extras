@@ -1,3 +1,4 @@
+
 /* =========================================
    1. CONFIGURACIÓN GENERAL
 ========================================= */
@@ -766,4 +767,56 @@ button:disabled {
 
 [hidden] {
     display: none !important;
+}
+
+
+/* =========================================
+   21. REVISIÓN Y ACCIONES DE HORAS EXTRAS
+========================================= */
+
+/* Ancho de la tabla de registros */
+.hours-list .table-container table {
+    min-width: 1400px;
+}
+
+/* Columnas de revisión y acciones */
+#hours-table-body td:nth-child(11),
+#hours-table-body td:nth-child(12) {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Botones de las acciones de registros */
+#hours-table-body button {
+    padding: 7px 11px;
+    margin: 3px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+/* Efecto al pasar el cursor */
+#hours-table-body button:hover {
+    filter: brightness(0.90);
+}
+
+/* Estado de revisión */
+#hours-table-body .revision-pendiente {
+    color: #9a6700;
+    background-color: #fff1bd;
+    padding: 6px 9px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+#hours-table-body .revision-completada {
+    color: #247a45;
+    background-color: #dff3e5;
+    padding: 6px 9px;
+    border-radius: 5px;
+    font-weight: bold;
 }
