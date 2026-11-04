@@ -1,4 +1,3 @@
-
 // =========================================
 // IMPORTACIÓN DE SUPABASE
 // =========================================
@@ -182,7 +181,7 @@ function calcularHoras(inicio, fin) {
 
 
 // =========================================
-// PREPARAR COLUMNA DE ACCIONES
+// PREPARAR COLUMNAS DE REVISIÓN Y ACCIONES
 // =========================================
 
 function prepararColumnaAcciones() {
@@ -199,11 +198,34 @@ function prepararColumnaAcciones() {
         return;
     }
 
-    const existeColumna = Array.from(encabezado.cells).some(
+    const columnas = Array.from(encabezado.cells);
+
+    const columnaRevisionExiste = columnas.some(
+        celda => celda.textContent.trim().toLowerCase() === "revisión"
+    );
+
+    const columnaAcciones = columnas.find(
         celda => celda.textContent.trim().toLowerCase() === "acciones"
     );
 
-    if (!existeColumna) {
+    if (!columnaRevisionExiste) {
+
+        const nuevaColumna = document.createElement("th");
+
+        nuevaColumna.textContent = "Revisión";
+
+        if (columnaAcciones) {
+            encabezado.insertBefore(nuevaColumna, columnaAcciones);
+        } else {
+            encabezado.appendChild(nuevaColumna);
+        }
+    }
+
+    const columnaAccionesExiste = Array.from(encabezado.cells).some(
+        celda => celda.textContent.trim().toLowerCase() === "acciones"
+    );
+
+    if (!columnaAccionesExiste) {
 
         const nuevaColumna = document.createElement("th");
 
@@ -1085,12 +1107,14 @@ async function iniciarEdicionRegistro(registro) {
         return;
     }
 
-    // El técnico solo puede editar sus propios registros registrados.
+    // El técnico solo puede editar sus propios registros
+    // registrados y que todavía no hayan sido revisados.
     if (
         esTecnico &&
         (
             registro.tecnico_id !== usuarioActual.id ||
-            registro.estado !== "registrada"
+            registro.estado !== "registrada" ||
+            registro.revisado === true
         )
     ) {
 
@@ -1202,12 +1226,14 @@ async function eliminarRegistro(registro) {
         return;
     }
 
-    // El técnico solo puede eliminar sus propios registros registrados.
+    // El técnico solo puede eliminar sus propios registros
+    // registrados y que todavía no hayan sido revisados.
     if (
         esTecnico &&
         (
             registro.tecnico_id !== usuarioActual.id ||
-            registro.estado !== "registrada"
+            registro.estado !== "registrada" ||
+            registro.revisado === true
         )
     ) {
 
@@ -1245,7 +1271,8 @@ async function eliminarRegistro(registro) {
 
             consulta = consulta
                 .eq("tecnico_id", usuarioActual.id)
-                .eq("estado", "registrada");
+                .eq("estado", "registrada")
+                .eq("revisado", false);
         }
 
         const { data, error } = await consulta
@@ -1295,6 +1322,88 @@ async function eliminarRegistro(registro) {
 
 
 // =========================================
+// REVISAR REGISTRO
+// =========================================
+
+async function revisarRegistro(registro) {
+
+    // Esta función solo puede ejecutarla el administrador.
+    if (perfilActual?.rol !== "administrador") {
+        return;
+    }
+
+    if (registro.revisado === true) {
+
+        mostrarMensaje(
+            hoursMessage,
+            "Este registro ya fue revisado.",
+            "info"
+        );
+
+        return;
+    }
+
+    const confirmacion = confirm(
+        `¿Confirma que desea marcar como revisado el registro del caso ${registro.numero_caso || "sin número"}?`
+    );
+
+    if (!confirmacion) {
+        return;
+    }
+
+    try {
+
+        mostrarMensaje(
+            hoursMessage,
+            "Procesando revisión...",
+            "info"
+        );
+
+        const { data, error } = await supabase
+            .from("registros_horas_extras")
+            .update({
+                revisado: true
+            })
+            .eq("id", registro.id)
+            .eq("revisado", false)
+            .select("id")
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data?.id) {
+
+            throw new Error(
+                "No se pudo confirmar la revisión del registro."
+            );
+        }
+
+        await cargarRegistrosHoras();
+
+        mostrarMensaje(
+            hoursMessage,
+            `El registro del caso ${registro.numero_caso || "sin número"} fue revisado correctamente.`,
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error revisando registro:",
+            error
+        );
+
+        mostrarMensaje(
+            hoursMessage,
+            error.message || "No se pudo revisar el registro."
+        );
+    }
+}
+
+
+// =========================================
 // REGISTRAR O ACTUALIZAR HORAS EXTRAS
 // =========================================
 
@@ -1337,7 +1446,8 @@ hoursForm.addEventListener("submit", async function (event) {
             esTecnico &&
             (
                 registroEnEdicion.tecnico_id !== usuarioActual.id ||
-                registroEnEdicion.estado !== "registrada"
+                registroEnEdicion.estado !== "registrada" ||
+                registroEnEdicion.revisado === true
             )
         ) {
 
@@ -1494,13 +1604,13 @@ hoursForm.addEventListener("submit", async function (event) {
 
                 consulta = consulta
                     .eq("tecnico_id", usuarioActual.id)
-                    .eq("estado", "registrada");
+                    .eq("estado", "registrada")
+                    .eq("revisado", false);
             }
 
-            const { data: registroActualizado, error } =
-                await consulta
-                    .select("id")
-                    .single();
+            const { data: registroActualizado, error } = await consulta
+                .select("id")
+                .single();
 
             if (error) {
                 throw error;
@@ -1716,7 +1826,8 @@ async function cargarRegistrosHoras() {
             ubicacion,
             actividad,
             observaciones,
-            estado
+            estado,
+            revisado
         `)
         .order("fecha_actividad", { ascending: false })
         .order("hora_inicio", { ascending: false });
@@ -1733,7 +1844,7 @@ async function cargarRegistrosHoras() {
         crearCelda(
             fila,
             "No se pudieron cargar los registros."
-        ).colSpan = 11;
+        ).colSpan = 12;
 
         hoursTableBody.appendChild(fila);
 
@@ -1752,7 +1863,7 @@ async function cargarRegistrosHoras() {
             ? "Todavía no tienes registros de horas extras."
             : "Todavía no existen registros de horas extras.";
 
-        crearCelda(fila, mensaje).colSpan = 11;
+        crearCelda(fila, mensaje).colSpan = 12;
 
         hoursTableBody.appendChild(fila);
 
@@ -1838,7 +1949,7 @@ function mostrarRegistrosEnTabla() {
             ? "Todavía no tienes registros de horas extras."
             : "No hay registros para el técnico seleccionado.";
 
-        crearCelda(fila, mensaje).colSpan = 11;
+        crearCelda(fila, mensaje).colSpan = 12;
 
         hoursTableBody.appendChild(fila);
 
@@ -1899,6 +2010,17 @@ function mostrarRegistrosEnTabla() {
         );
 
         // =====================================
+        // ESTADO DE REVISIÓN
+        // =====================================
+
+        crearCelda(
+            fila,
+            registro.revisado === true
+                ? "Revisada"
+                : "Pendiente"
+        );
+
+        // =====================================
         // BOTONES DE ACCIONES
         // =====================================
 
@@ -1915,9 +2037,30 @@ function mostrarRegistrosEnTabla() {
             esAdministrador ||
             (
                 esTecnicoPropietario &&
-                registro.estado === "registrada"
+                registro.estado === "registrada" &&
+                registro.revisado !== true
             );
 
+        // El administrador puede revisar cualquier registro
+        // que todavía esté pendiente de revisión.
+        if (esAdministrador && registro.revisado !== true) {
+
+            const botonRevisar = document.createElement("button");
+
+            botonRevisar.type = "button";
+            botonRevisar.textContent = "Revisar";
+            botonRevisar.className = "action-button edit-button";
+
+            botonRevisar.addEventListener("click", function () {
+
+                revisarRegistro(registro);
+            });
+
+            celdaAcciones.appendChild(botonRevisar);
+        }
+
+        // El administrador conserva Editar y Eliminar,
+        // incluso después de marcar un registro como revisado.
         if (puedeModificar) {
 
             const botonEditar = document.createElement("button");
@@ -1945,8 +2088,9 @@ function mostrarRegistrosEnTabla() {
             });
 
             celdaAcciones.appendChild(botonEliminar);
+        }
 
-        } else {
+        if (celdaAcciones.children.length === 0) {
 
             celdaAcciones.textContent = "—";
         }
@@ -2059,6 +2203,7 @@ async function mostrarPanel() {
     }
 
     prepararColumnaAcciones();
+
     prepararBotonCancelarEdicion();
 
     await configurarModuloHoras();
