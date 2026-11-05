@@ -451,18 +451,186 @@ async function cargarResumenAdministrador() {
 
                 const fila = adminSummaryTableBody.insertRow();
 
-                crearCelda(fila, tecnico.nombre_completo);
-                crearCelda(fila, tecnico.usuario);
+                
+function mostrarErrorTablaTecnicos(mensaje) {
 
-                const celdaTotal = crearCelda(
-                    fila,
-                    formatearHoras(total)
-                );
+    // Tabla de gestión
+    const filaGestion = techniciansTableBody.insertRow();
 
-                celdaTotal.classList.add("hours-total-cell");
-                celdaTotal.classList.add(obtenerClaseHoras(total));
-            });
-        }
+    crearCelda(filaGestion, mensaje).colSpan = 5;
+
+    // Tabla de técnicos registrados
+    const filaLista = techniciansListTableBody.insertRow();
+
+    crearCelda(filaLista, mensaje).colSpan = 4;
+
+    // Información de paginación
+    techniciansPageInfo.textContent = "Sin registros";
+
+    techniciansPrevPageButton.disabled = true;
+    techniciansNextPageButton.disabled = true;
+}
+
+
+// =========================================
+// MOSTRAR TÉCNICOS CON PAGINACIÓN
+// =========================================
+
+function mostrarTecnicosPaginados() {
+
+    techniciansListTableBody.innerHTML = "";
+
+    const totalTecnicos = tecnicosCargados.length;
+
+    const totalPaginas = Math.max(
+        1,
+        Math.ceil(totalTecnicos / TECNICOS_POR_PAGINA)
+    );
+
+    // Evitar que la página actual supere el total
+    if (paginaTecnicosActual > totalPaginas) {
+        paginaTecnicosActual = totalPaginas;
+    }
+
+    const inicio =
+        (paginaTecnicosActual - 1) * TECNICOS_POR_PAGINA;
+
+    const fin = inicio + TECNICOS_POR_PAGINA;
+
+    const tecnicosPagina = tecnicosCargados.slice(inicio, fin);
+
+    if (tecnicosPagina.length === 0) {
+
+        const fila = techniciansListTableBody.insertRow();
+
+        crearCelda(
+            fila,
+            "Todavía no hay técnicos registrados."
+        ).colSpan = 4;
+
+    } else {
+
+        tecnicosPagina.forEach(function (tecnico) {
+
+            const fila = techniciansListTableBody.insertRow();
+
+            crearCelda(fila, tecnico.nombre_completo);
+            crearCelda(fila, tecnico.usuario);
+
+            crearCelda(
+                fila,
+                tecnico.area || "Sin asignar"
+            );
+
+            crearCelda(
+                fila,
+                tecnico.activo ? "Activo" : "Inactivo"
+            );
+        });
+    }
+
+    // Actualizar información de paginación
+    if (totalTecnicos === 0) {
+
+        techniciansPageInfo.textContent = "Sin técnicos";
+
+    } else {
+
+        const primerRegistro = inicio + 1;
+
+        const ultimoRegistro = Math.min(
+            fin,
+            totalTecnicos
+        );
+
+        techniciansPageInfo.textContent =
+            `Página ${paginaTecnicosActual} de ${totalPaginas} | Técnicos ${primerRegistro}-${ultimoRegistro} de ${totalTecnicos}`;
+    }
+
+    // Activar o desactivar botones
+    techniciansPrevPageButton.disabled =
+        paginaTecnicosActual <= 1;
+
+    techniciansNextPageButton.disabled =
+        paginaTecnicosActual >= totalPaginas;
+}
+
+
+// =========================================
+// MOSTRAR TÉCNICOS EN GESTIÓN
+// =========================================
+
+function mostrarTecnicosGestion() {
+
+    techniciansTableBody.innerHTML = "";
+
+    if (tecnicosCargados.length === 0) {
+
+        const fila = techniciansTableBody.insertRow();
+
+        crearCelda(
+            fila,
+            "Todavía no hay técnicos registrados."
+        ).colSpan = 5;
+
+        return;
+    }
+
+    tecnicosCargados.forEach(function (tecnico) {
+
+        const fila = techniciansTableBody.insertRow();
+
+        crearCelda(fila, tecnico.nombre_completo);
+        crearCelda(fila, tecnico.usuario);
+
+        crearCelda(
+            fila,
+            tecnico.area || "Sin asignar"
+        );
+
+        crearCelda(
+            fila,
+            tecnico.activo ? "Activo" : "Inactivo"
+        );
+
+        const celdaAcciones = document.createElement("td");
+
+        celdaAcciones.textContent = "Pendiente de implementar";
+
+        fila.appendChild(celdaAcciones);
+    });
+}
+
+// =========================================
+// EVENTOS DE PAGINACIÓN DE TÉCNICOS
+// =========================================
+
+techniciansPrevPageButton.addEventListener("click", function () {
+
+    if (paginaTecnicosActual > 1) {
+
+        paginaTecnicosActual--;
+
+        mostrarTecnicosPaginados();
+    }
+});
+
+
+techniciansNextPageButton.addEventListener("click", function () {
+
+    const totalPaginas = Math.ceil(
+        tecnicosCargados.length / TECNICOS_POR_PAGINA
+    );
+
+    if (paginaTecnicosActual < totalPaginas) {
+
+        paginaTecnicosActual++;
+
+        mostrarTecnicosPaginados();
+    }
+});
+
+
 
         adminSummaryTotal.textContent = formatearHoras(totalGeneral);
 
@@ -668,13 +836,15 @@ caseGenerationDateInput.addEventListener(
 // CARGAR TÉCNICOS
 // =========================================
 
+
 async function cargarTecnicos() {
 
-    techniciansTableBody.textContent = "";
+    techniciansTableBody.innerHTML = "";
+    techniciansListTableBody.innerHTML = "";
 
     const { data: tecnicos, error } = await supabase
         .from("perfiles")
-        .select("id, nombre_completo, usuario, activo")
+        .select("id, nombre_completo, usuario, activo, area")
         .eq("rol", "tecnico")
         .order("nombre_completo", { ascending: true });
 
@@ -682,48 +852,26 @@ async function cargarTecnicos() {
 
         console.error("Error consultando técnicos:", error);
 
-        const fila = document.createElement("tr");
-
-        crearCelda(
-            fila,
+        mostrarErrorTablaTecnicos(
             "No se pudieron cargar los técnicos."
-        ).colSpan = 5;
-
-        techniciansTableBody.appendChild(fila);
+        );
 
         return;
     }
 
     tecnicosCargados = tecnicos || [];
 
-    if (tecnicosCargados.length === 0) {
+    // Reiniciar la paginación al cargar los técnicos
+    paginaTecnicosActual = 1;
 
-        const fila = document.createElement("tr");
+    // Mostrar técnicos en ambas tablas
+    mostrarTecnicosPaginados();
+    mostrarTecnicosGestion();
 
-        crearCelda(
-            fila,
-            "Todavía no hay técnicos registrados."
-        ).colSpan = 5;
-
-        techniciansTableBody.appendChild(fila);
-
-        return;
-    }
-
-    tecnicosCargados.forEach(function (tecnico) {
-
-        const fila = document.createElement("tr");
-
-        crearCelda(fila, tecnico.nombre_completo);
-        crearCelda(fila, tecnico.usuario);
-        crearCelda(fila, tecnico.activo ? "Activo" : "Inactivo");
-        crearCelda(fila, "Próximamente");
-
-        techniciansTableBody.appendChild(fila);
-    });
-
+    // Actualizar filtro de técnicos
     actualizarFiltroTecnicos();
 }
+
 
 
 // =========================================
