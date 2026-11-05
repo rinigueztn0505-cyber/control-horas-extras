@@ -113,7 +113,9 @@
         </section>
 
 
-        <!-- 1. REGISTROS DE TODOS LOS TÉCNICOS -->
+        <!-- =================================================
+             1. REGISTROS DE TODOS LOS TÉCNICOS
+             ================================================= -->
         <section class="dashboard-content" id="all-technicians-records-section" hidden>
 
             <div class="module-header">
@@ -123,8 +125,10 @@
                 </div>
 
                 <div class="export-controls">
+
                     <div class="form-group">
                         <label for="export-area-filter">Área para exportar</label>
+
                         <select id="export-area-filter">
                             <option value="todos">Todas las áreas</option>
                             <option value="Radio">Radio</option>
@@ -135,380 +139,39 @@
                     <button type="button" id="export-hours-csv-button">
                         Exportar CSV
                     </button>
+
                 </div>
             </div>
 
             <p id="export-message" class="form-message"></p>
 
-        </section>
 
-
-        <!-- 2. CONTROL DE HORAS EXTRAS -->
-        <section class="dashboard-content" id="hours-module" hidden>
-
-            <div class="module-header">
-                <div>
-                    <h2>Control de horas extras</h2>
-                    <p id="hours-module-description"></p>
-                </div>
-            </div>
-
-
-            <!-- RESUMEN MENSUAL PARA ADMINISTRADOR -->
-            <section id="admin-hours-summary" class="hours-summary" hidden>
-
-                <div class="summary-header">
-                    <div>
-                        <h3>Resumen mensual por técnico</h3>
-                        <p>Acumulado de horas extras registradas en el mes seleccionado.</p>
-                    </div>
-
-                    <div class="summary-month">
-                        <label for="summary-month">Mes de consulta</label>
-                        <input type="month" id="summary-month">
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Técnico</th>
-                                <th>Usuario</th>
-                                <th>Total de horas</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="admin-summary-table-body">
-                            <tr>
-                                <td colspan="3">Cargando resumen...</td>
-                            </tr>
-                        </tbody>
-
-                        <tfoot>
-                            <tr class="summary-total-row">
-                                <th colspan="2">TOTAL GENERAL</th>
-                                <th id="admin-summary-total">0.00 h</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-            </section>
-
-
-            <!-- RESUMEN MENSUAL PARA TÉCNICO -->
-            <section id="technician-hours-summary" class="hours-summary" hidden>
-
-                <div class="summary-header">
-                    <div>
-                        <h3>Mis horas extras acumuladas</h3>
-                        <p>Horas registradas durante el mes seleccionado.</p>
-                    </div>
-
-                    <div class="summary-month">
-                        <label for="technician-summary-month">Mes de consulta</label>
-                        <input type="month" id="technician-summary-month">
-                    </div>
-                </div>
-
-                <div id="technician-hours-total" class="hours-total-box">
-                    <span>Total acumulado</span>
-                    <strong id="technician-hours-total-value">0.00 h</strong>
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- 3. REGISTRAR NUEVA ACTIVIDAD -->
-        <section class="dashboard-content" id="new-activity-section" hidden>
-
-            <div class="module-header">
-                <div>
-                    <h2>Registrar nueva actividad</h2>
-                    <p>Registro de actividades y horas extras del personal técnico.</p>
-                </div>
-            </div>
-
-            <div id="hours-form-container" hidden>
-
-                <form id="hours-form">
-
-                    <div class="form-grid">
-
-                        <!-- SELECCIÓN DE TÉCNICO: SOLO ADMINISTRADOR -->
-                        <div class="form-group full-width"
-                            id="technician-select-container" hidden>
-
-                            <label for="hours-technician">
-                                Técnico al que se acreditan las horas
-                            </label>
-
-                            <select id="hours-technician" name="tecnico_id">
-                                <option value="">Seleccione un técnico</option>
-                            </select>
-
-                        </div>
-
-
-                        <!-- DATOS DEL CASO -->
-                        <div class="form-group">
-                            <label for="case-number">Número de caso o tarea</label>
-
-                            <input type="text" id="case-number"
-                                name="numero_caso"
-                                placeholder="Ingrese el número de caso"
-                                maxlength="100" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="case-generation-date">
-                                Fecha de generación del caso
-                            </label>
-
-                            <input type="date" id="case-generation-date"
-                                name="fecha_generacion_caso" required>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <p id="hours-deadline-message" class="form-message"></p>
-                        </div>
-
-
-                        <!-- FECHA Y HORARIO DE ACTIVIDAD -->
-                        <div class="form-group">
-                            <label for="activity-date">
-                                Fecha de realización de la actividad
-                            </label>
-
-                            <input type="date" id="activity-date"
-                                name="fecha_actividad" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="start-time">Hora de inicio</label>
-
-                            <input type="time" id="start-time"
-                                name="hora_inicio" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="end-time">Hora de fin</label>
-
-                            <input type="time" id="end-time"
-                                name="hora_fin" required>
-                        </div>
-
-
-                        <!-- DESCRIPCIÓN -->
-                        <div class="form-group full-width">
-                            <label for="activity-description">
-                                Descripción de la actividad realizada
-                            </label>
-
-                            <textarea id="activity-description"
-                                name="actividad" rows="3"
-                                placeholder="Describa el trabajo realizado"
-                                maxlength="1000" required></textarea>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label for="activity-observations">Observaciones</label>
-
-                            <textarea id="activity-observations"
-                                name="observaciones" rows="3"
-                                placeholder="Observaciones adicionales (opcional)"
-                                maxlength="1000"></textarea>
-                        </div>
-
-                    </div>
-
-
-                    <div class="hours-form-actions">
-
-                        <button type="submit" id="save-hours-button">
-                            Registrar horas extras
-                        </button>
-
-                        <button type="reset" id="reset-hours-button">
-                            Limpiar formulario
-                        </button>
-
-                    </div>
-
-                    <p id="hours-message" class="form-message"></p>
-
-                </form>
-
-            </div>
-
-        </section>
-
-
-        <!-- 4. TÉCNICOS REGISTRADOS -->
-        <section class="dashboard-content" id="technicians-list-section" hidden>
-
-            <div class="module-header">
-                <div>
-                    <h2>Técnicos registrados</h2>
-                    <p>Listado del personal técnico, clasificado por área.</p>
-                </div>
-            </div>
-
-            <div class="technician-list">
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre completo</th>
-                                <th>Usuario</th>
-                                <th>Área</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="technicians-list-table-body">
-                            <tr>
-                                <td colspan="4">Cargando técnicos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- PAGINACIÓN: 15 TÉCNICOS POR PÁGINA -->
-                <div id="technicians-pagination" class="pagination-container">
-                    <button type="button" id="technicians-prev-page" disabled>
-                        Anterior
-                    </button>
-
-                    <span id="technicians-page-info">Página 1</span>
-
-                    <button type="button" id="technicians-next-page" disabled>
-                        Siguiente
-                    </button>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- 5. GESTIÓN DE TÉCNICOS -->
-        <section class="dashboard-content" id="technician-management-section" hidden>
-
-            <div class="module-header">
-                <div>
-                    <h2>Gestión de técnicos</h2>
-                    <p>Administración de las cuentas del personal técnico.</p>
-                </div>
-
-                <button type="button" id="show-technician-form">
-                    + Registrar técnico
-                </button>
-            </div>
-
-            <div id="technician-form-container" hidden>
-
-                <h3 id="technician-form-title">Registrar nuevo técnico</h3>
-
-                <form id="technician-form">
-
-                    <div class="form-group">
-                        <label for="technician-name">Nombre completo</label>
-                        <input type="text" id="technician-name"
-                            name="nombre_completo"
-                            placeholder="Ingrese el nombre completo"
-                            required minlength="3" maxlength="120">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="technician-username">Nombre de usuario</label>
-                        <input type="text" id="technician-username"
-                            name="usuario"
-                            placeholder="Ejemplo: jlopez"
-                            required minlength="3" maxlength="30"
-                            pattern="[a-zA-Z0-9._-]+">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="technician-area">Área</label>
-                        <select id="technician-area" name="area" required>
-                            <option value="">Seleccione un área</option>
-                            <option value="Radio">Radio</option>
-                            <option value="WiFi">WiFi</option>
-                        </select>
-                    </div>
-
-                    <div class="technician-form-actions">
-
-                        <button type="submit" id="save-technician-button">
-                            Registrar técnico
-                        </button>
-
-                        <button type="button" id="cancel-technician-button">
-                            Cancelar
-                        </button>
-
-                    </div>
-
-                    <p id="technician-message" class="form-message"></p>
-
-                </form>
-
-            </div>
-
-            <!-- TABLA DE GESTIÓN DE TÉCNICOS -->
-            <div class="technician-list">
-
-                <h3>Administrar técnicos</h3>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre completo</th>
-                                <th>Usuario</th>
-                                <th>Área</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="technicians-table-body">
-                            <tr>
-                                <td colspan="5">Cargando técnicos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- REGISTROS DE HORAS EXTRAS -->
-        <section class="dashboard-content" id="hours-records-section" hidden>
-
-            <div class="hours-list">
+            <!-- TABLA DE REGISTROS DE HORAS EXTRAS -->
+            <div id="hours-records-section" class="hours-list" hidden>
 
                 <div class="hours-list-header">
+
                     <div>
                         <h2 id="hours-list-title">Registros de horas extras</h2>
                         <p>Consulta de actividades registradas y estado de revisión.</p>
                     </div>
 
                     <!-- FILTRO SOLO PARA ADMINISTRADOR -->
-                    <div id="hours-technician-filter-container" class="summary-filter" hidden>
-                        <label for="hours-technician-filter">Filtrar por técnico</label>
+                    <div id="hours-technician-filter-container"
+                        class="summary-filter" hidden>
+
+                        <label for="hours-technician-filter">
+                            Filtrar por técnico
+                        </label>
+
                         <select id="hours-technician-filter">
                             <option value="">Todos los técnicos</option>
                         </select>
+
                     </div>
+
                 </div>
+
 
                 <div class="table-container">
 
@@ -535,6 +198,472 @@
                                 <td colspan="12">Cargando registros...</td>
                             </tr>
                         </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             2. CONTROL DE HORAS EXTRAS
+             ================================================= -->
+        <section class="dashboard-content" id="hours-module" hidden>
+
+            <div class="module-header">
+                <div>
+                    <h2>Control de horas extras</h2>
+                    <p id="hours-module-description"></p>
+                </div>
+            </div>
+
+
+            <!-- RESUMEN MENSUAL PARA ADMINISTRADOR -->
+            <section id="admin-hours-summary"
+                class="hours-summary" hidden>
+
+                <div class="summary-header">
+
+                    <div>
+                        <h3>Resumen mensual por técnico</h3>
+                        <p>Acumulado de horas extras registradas en el mes seleccionado.</p>
+                    </div>
+
+                    <div class="summary-month">
+                        <label for="summary-month">Mes de consulta</label>
+                        <input type="month" id="summary-month">
+                    </div>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Técnico</th>
+                                <th>Usuario</th>
+                                <th>Total de horas</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="admin-summary-table-body">
+                            <tr>
+                                <td colspan="3">Cargando resumen...</td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot>
+                            <tr class="summary-total-row">
+                                <th colspan="2">TOTAL GENERAL</th>
+                                <th id="admin-summary-total">0.00 h</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- RESUMEN MENSUAL PARA TÉCNICO -->
+            <section id="technician-hours-summary"
+                class="hours-summary" hidden>
+
+                <div class="summary-header">
+
+                    <div>
+                        <h3>Mis horas extras acumuladas</h3>
+                        <p>Horas registradas durante el mes seleccionado.</p>
+                    </div>
+
+                    <div class="summary-month">
+                        <label for="technician-summary-month">
+                            Mes de consulta
+                        </label>
+
+                        <input type="month" id="technician-summary-month">
+                    </div>
+
+                </div>
+
+
+                <div id="technician-hours-total"
+                    class="hours-total-box">
+
+                    <span>Total acumulado</span>
+
+                    <strong id="technician-hours-total-value">
+                        0.00 h
+                    </strong>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             3. REGISTRAR NUEVA ACTIVIDAD
+             ================================================= -->
+        <section class="dashboard-content"
+            id="new-activity-section" hidden>
+
+            <div class="module-header">
+                <div>
+                    <h2>Registrar nueva actividad</h2>
+                    <p>Registro de actividades y horas extras del personal técnico.</p>
+                </div>
+            </div>
+
+
+            <div id="hours-form-container" hidden>
+
+                <form id="hours-form">
+
+                    <div class="form-grid">
+
+
+                        <!-- SELECCIÓN DE TÉCNICO: SOLO ADMINISTRADOR -->
+                        <div class="form-group full-width"
+                            id="technician-select-container" hidden>
+
+                            <label for="hours-technician">
+                                Técnico al que se acreditan las horas
+                            </label>
+
+                            <select id="hours-technician" name="tecnico_id">
+                                <option value="">Seleccione un técnico</option>
+                            </select>
+
+                        </div>
+
+
+                        <!-- DATOS DEL CASO -->
+                        <div class="form-group">
+
+                            <label for="case-number">
+                                Número de caso o tarea
+                            </label>
+
+                            <input type="text"
+                                id="case-number"
+                                name="numero_caso"
+                                placeholder="Ingrese el número de caso"
+                                maxlength="100"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="case-generation-date">
+                                Fecha de generación del caso
+                            </label>
+
+                            <input type="date"
+                                id="case-generation-date"
+                                name="fecha_generacion_caso"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group full-width">
+                            <p id="hours-deadline-message"
+                                class="form-message"></p>
+                        </div>
+
+
+                        <!-- FECHA Y HORARIO DE ACTIVIDAD -->
+                        <div class="form-group">
+
+                            <label for="activity-date">
+                                Fecha de realización de la actividad
+                            </label>
+
+                            <input type="date"
+                                id="activity-date"
+                                name="fecha_actividad"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="start-time">Hora de inicio</label>
+
+                            <input type="time"
+                                id="start-time"
+                                name="hora_inicio"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="end-time">Hora de fin</label>
+
+                            <input type="time"
+                                id="end-time"
+                                name="hora_fin"
+                                required>
+
+                        </div>
+
+
+                        <!-- DESCRIPCIÓN -->
+                        <div class="form-group full-width">
+
+                            <label for="activity-description">
+                                Descripción de la actividad realizada
+                            </label>
+
+                            <textarea id="activity-description"
+                                name="actividad"
+                                rows="3"
+                                placeholder="Describa el trabajo realizado"
+                                maxlength="1000"
+                                required></textarea>
+
+                        </div>
+
+
+                        <div class="form-group full-width">
+
+                            <label for="activity-observations">
+                                Observaciones
+                            </label>
+
+                            <textarea id="activity-observations"
+                                name="observaciones"
+                                rows="3"
+                                placeholder="Observaciones adicionales (opcional)"
+                                maxlength="1000"></textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="hours-form-actions">
+
+                        <button type="submit" id="save-hours-button">
+                            Registrar horas extras
+                        </button>
+
+                        <button type="reset" id="reset-hours-button">
+                            Limpiar formulario
+                        </button>
+
+                    </div>
+
+                    <p id="hours-message" class="form-message"></p>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             4. TÉCNICOS REGISTRADOS
+             ================================================= -->
+        <section class="dashboard-content"
+            id="technicians-list-section" hidden>
+
+            <div class="module-header">
+                <div>
+                    <h2>Técnicos registrados</h2>
+                    <p>Listado del personal técnico, clasificado por área.</p>
+                </div>
+            </div>
+
+
+            <div class="technician-list">
+
+                <div class="table-container">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre completo</th>
+                                <th>Usuario</th>
+                                <th>Área</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="technicians-list-table-body">
+                            <tr>
+                                <td colspan="4">Cargando técnicos...</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- PAGINACIÓN: 15 TÉCNICOS POR PÁGINA -->
+                <div id="technicians-pagination"
+                    class="pagination-container">
+
+                    <button type="button"
+                        id="technicians-prev-page"
+                        disabled>
+                        Anterior
+                    </button>
+
+                    <span id="technicians-page-info">
+                        Página 1
+                    </span>
+
+                    <button type="button"
+                        id="technicians-next-page"
+                        disabled>
+                        Siguiente
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             5. GESTIÓN DE TÉCNICOS
+             ================================================= -->
+        <section class="dashboard-content"
+            id="technician-management-section" hidden>
+
+            <div class="module-header">
+
+                <div>
+                    <h2>Gestión de técnicos</h2>
+                    <p>Administración de las cuentas del personal técnico.</p>
+                </div>
+
+                <button type="button" id="show-technician-form">
+                    + Registrar técnico
+                </button>
+
+            </div>
+
+
+            <!-- FORMULARIO DE CREACIÓN Y EDICIÓN -->
+            <div id="technician-form-container" hidden>
+
+                <h3 id="technician-form-title">
+                    Registrar nuevo técnico
+                </h3>
+
+                <form id="technician-form">
+
+                    <div class="form-group">
+
+                        <label for="technician-name">
+                            Nombre completo
+                        </label>
+
+                        <input type="text"
+                            id="technician-name"
+                            name="nombre_completo"
+                            placeholder="Ingrese el nombre completo"
+                            required
+                            minlength="3"
+                            maxlength="120">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="technician-username">
+                            Nombre de usuario
+                        </label>
+
+                        <input type="text"
+                            id="technician-username"
+                            name="usuario"
+                            placeholder="Ejemplo: jlopez"
+                            required
+                            minlength="3"
+                            maxlength="30"
+                            pattern="[a-zA-Z0-9._-]+">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="technician-area">Área</label>
+
+                        <select id="technician-area"
+                            name="area"
+                            required>
+
+                            <option value="">Seleccione un área</option>
+                            <option value="Radio">Radio</option>
+                            <option value="WiFi">WiFi</option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="technician-form-actions">
+
+                        <button type="submit" id="save-technician-button">
+                            Registrar técnico
+                        </button>
+
+                        <button type="button" id="cancel-technician-button">
+                            Cancelar
+                        </button>
+
+                    </div>
+
+                    <p id="technician-message"
+                        class="form-message"></p>
+
+                </form>
+
+            </div>
+
+
+            <!-- TABLA DE GESTIÓN DE TÉCNICOS -->
+            <div class="technician-list">
+
+                <h3>Administrar técnicos</h3>
+
+                <div class="table-container">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre completo</th>
+                                <th>Usuario</th>
+                                <th>Área</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="technicians-table-body">
+                            <tr>
+                                <td colspan="5">Cargando técnicos...</td>
+                            </tr>
+                        </tbody>
 
                     </table>
 
@@ -546,6 +675,8 @@
 
     </main>
 
+
+    <!-- JAVASCRIPT PRINCIPAL -->
     <script type="module" src="/src/main.js"></script>
 
 </body>

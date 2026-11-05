@@ -1,3 +1,4 @@
+
 // =========================================
 // IMPORTACIÓN DE SUPABASE
 // =========================================
@@ -39,9 +40,28 @@ const technicianFormContainer = document.getElementById("technician-form-contain
 const technicianForm = document.getElementById("technician-form");
 const technicianNameInput = document.getElementById("technician-name");
 const technicianUsernameInput = document.getElementById("technician-username");
+const technicianAreaInput = document.getElementById("technician-area");
+const technicianFormTitle = document.getElementById("technician-form-title");
 const saveTechnicianButton = document.getElementById("save-technician-button");
 const cancelTechnicianButton = document.getElementById("cancel-technician-button");
 const technicianMessage = document.getElementById("technician-message");
+
+// Listado de técnicos y paginación
+const techniciansListSection = document.getElementById("technicians-list-section");
+const techniciansListTableBody = document.getElementById("technicians-list-table-body");
+const techniciansPrevPageButton = document.getElementById("technicians-prev-page");
+const techniciansNextPageButton = document.getElementById("technicians-next-page");
+const techniciansPageInfo = document.getElementById("technicians-page-info");
+
+// Secciones del panel
+const allTechniciansRecordsSection = document.getElementById("all-technicians-records-section");
+const newActivitySection = document.getElementById("new-activity-section");
+const hoursRecordsSection = document.getElementById("hours-records-section");
+
+// Exportación CSV
+const exportAreaFilter = document.getElementById("export-area-filter");
+const exportHoursCsvButton = document.getElementById("export-hours-csv-button");
+const exportMessage = document.getElementById("export-message");
 
 // Módulo de horas extras
 const hoursModule = document.getElementById("hours-module");
@@ -84,6 +104,11 @@ const technicianHoursTotalValue = document.getElementById("technician-hours-tota
 const hoursTechnicianFilterContainer = document.getElementById("hours-technician-filter-container");
 const hoursTechnicianFilter = document.getElementById("hours-technician-filter");
 
+
+// =========================================
+// VARIABLES GLOBALES
+// =========================================
+
 // Usuario y perfil actuales
 let usuarioActual = null;
 let perfilActual = null;
@@ -96,8 +121,15 @@ let nombresUsuarios = new Map();
 // Registro que se está editando
 let registroEnEdicion = null;
 
-// Botón para cancelar la edición
+// Técnico que se está editando
+let tecnicoEnEdicion = null;
+
+// Botón para cancelar la edición de horas
 let cancelEditButton = null;
+
+// Control de paginación
+let paginaTecnicosActual = 1;
+const TECNICOS_POR_PAGINA = 15;
 
 
 // =========================================
@@ -655,7 +687,7 @@ async function cargarTecnicos() {
         crearCelda(
             fila,
             "No se pudieron cargar los técnicos."
-        ).colSpan = 4;
+        ).colSpan = 5;
 
         techniciansTableBody.appendChild(fila);
 
@@ -671,7 +703,7 @@ async function cargarTecnicos() {
         crearCelda(
             fila,
             "Todavía no hay técnicos registrados."
-        ).colSpan = 4;
+        ).colSpan = 5;
 
         techniciansTableBody.appendChild(fila);
 
@@ -1107,8 +1139,6 @@ async function iniciarEdicionRegistro(registro) {
         return;
     }
 
-    // El técnico solo puede editar sus propios registros
-    // registrados y que todavía no hayan sido revisados.
     if (
         esTecnico &&
         (
@@ -1128,7 +1158,6 @@ async function iniciarEdicionRegistro(registro) {
 
     registroEnEdicion = registro;
 
-    // Cargar los datos del registro en el formulario.
     caseNumberInput.value = registro.numero_caso || "";
     caseGenerationDateInput.value =
         registro.fecha_generacion_caso || "";
@@ -1148,15 +1177,12 @@ async function iniciarEdicionRegistro(registro) {
     activityObservationsInput.value =
         registro.observaciones || "";
 
-    // El administrador puede cambiar el técnico destinatario.
     if (esAdministrador) {
 
         const tecnicoExiste = Array.from(
             hoursTechnicianSelect.options
         ).some(opcion => opcion.value === registro.tecnico_id);
 
-        // Si el técnico está inactivo, se agrega temporalmente
-        // para permitir editar su registro.
         if (!tecnicoExiste) {
 
             const opcion = document.createElement("option");
@@ -1226,8 +1252,6 @@ async function eliminarRegistro(registro) {
         return;
     }
 
-    // El técnico solo puede eliminar sus propios registros
-    // registrados y que todavía no hayan sido revisados.
     if (
         esTecnico &&
         (
@@ -1266,7 +1290,6 @@ async function eliminarRegistro(registro) {
             .delete()
             .eq("id", registro.id);
 
-        // Filtro adicional de seguridad para el técnico.
         if (esTecnico) {
 
             consulta = consulta
@@ -1289,7 +1312,6 @@ async function eliminarRegistro(registro) {
             );
         }
 
-        // Si se estaba editando el registro eliminado, limpiar formulario.
         if (registroEnEdicion?.id === registro.id) {
 
             restablecerFormularioHoras();
@@ -1327,7 +1349,6 @@ async function eliminarRegistro(registro) {
 
 async function revisarRegistro(registro) {
 
-    // Esta función solo puede ejecutarla el administrador.
     if (perfilActual?.rol !== "administrador") {
         return;
     }
@@ -1439,7 +1460,6 @@ hoursForm.addEventListener("submit", async function (event) {
         return;
     }
 
-    // Verificar nuevamente los permisos de edición.
     if (estaEditando) {
 
         if (
@@ -1503,9 +1523,6 @@ hoursForm.addEventListener("submit", async function (event) {
         return;
     }
 
-    // Validación del plazo para nuevos registros de técnicos.
-    // Al editar se permite modificar un registro ya existente,
-    // aunque el plazo original haya vencido.
     if (esTecnico && !estaEditando) {
 
         const fechaBloqueo =
@@ -1582,7 +1599,6 @@ hoursForm.addEventListener("submit", async function (event) {
             ubicacion: registroEnEdicion?.ubicacion || null,
             observaciones: observaciones || null,
 
-            // Conservar el estado original al editar.
             estado: estaEditando
                 ? registroEnEdicion.estado
                 : "registrada"
@@ -1590,16 +1606,11 @@ hoursForm.addEventListener("submit", async function (event) {
 
         if (estaEditando) {
 
-            // =====================================
-            // ACTUALIZAR REGISTRO EXISTENTE
-            // =====================================
-
             let consulta = supabase
                 .from("registros_horas_extras")
                 .update(nuevoRegistro)
                 .eq("id", registroEnEdicion.id);
 
-            // Seguridad adicional para el técnico.
             if (esTecnico) {
 
                 consulta = consulta
@@ -1637,10 +1648,6 @@ hoursForm.addEventListener("submit", async function (event) {
 
         } else {
 
-            // =====================================
-            // INSERTAR NUEVO REGISTRO
-            // =====================================
-
             const { data: registroGuardado, error } = await supabase
                 .from("registros_horas_extras")
                 .insert(nuevoRegistro)
@@ -1658,8 +1665,6 @@ hoursForm.addEventListener("submit", async function (event) {
                 );
             }
 
-            // Procesar las notificaciones solamente
-            // cuando se crea un registro nuevo.
             const respuestaAlertas = await supabase.functions.invoke(
                 "procesar-alertas-horas",
                 {
@@ -1792,7 +1797,6 @@ if (resetHoursButton) {
         hoursMessage.textContent = "";
         hoursDeadlineMessage.textContent = "";
 
-        // Esperar a que el navegador termine el reset nativo.
         setTimeout(function () {
 
             activityDateInput.value = obtenerFechaLocal();
@@ -1918,7 +1922,6 @@ function mostrarRegistrosEnTabla() {
 
     let registros = [...registrosCargados];
 
-    // El técnico solo visualiza sus propios registros.
     if (perfilActual?.rol === "tecnico") {
 
         registros = registros.filter(function (registro) {
@@ -1927,7 +1930,6 @@ function mostrarRegistrosEnTabla() {
         });
     }
 
-    // El administrador puede filtrar por técnico.
     if (perfilActual?.rol === "administrador") {
 
         const tecnicoSeleccionado = hoursTechnicianFilter.value;
@@ -2009,20 +2011,12 @@ function mostrarRegistrosEnTabla() {
             registro.estado || "—"
         );
 
-        // =====================================
-        // ESTADO DE REVISIÓN
-        // =====================================
-
         crearCelda(
             fila,
             registro.revisado === true
                 ? "Revisada"
                 : "Pendiente"
         );
-
-        // =====================================
-        // BOTONES DE ACCIONES
-        // =====================================
 
         const celdaAcciones = document.createElement("td");
 
@@ -2041,8 +2035,6 @@ function mostrarRegistrosEnTabla() {
                 registro.revisado !== true
             );
 
-        // El administrador puede revisar cualquier registro
-        // que todavía esté pendiente de revisión.
         if (esAdministrador && registro.revisado !== true) {
 
             const botonRevisar = document.createElement("button");
@@ -2059,8 +2051,6 @@ function mostrarRegistrosEnTabla() {
             celdaAcciones.appendChild(botonRevisar);
         }
 
-        // El administrador conserva Editar y Eliminar,
-        // incluso después de marcar un registro como revisado.
         if (puedeModificar) {
 
             const botonEditar = document.createElement("button");
@@ -2338,6 +2328,9 @@ logoutButton.addEventListener("click", async function () {
     nombresUsuarios.clear();
 
     registroEnEdicion = null;
+    tecnicoEnEdicion = null;
+
+    paginaTecnicosActual = 1;
 
     mostrarLogin();
 
@@ -2378,6 +2371,18 @@ logoutButton.addEventListener("click", async function () {
 
     hoursTechnicianFilter.innerHTML =
         '<option value="">Todos los técnicos</option>';
+
+    techniciansTableBody.innerHTML = "";
+    techniciansListTableBody.innerHTML = "";
+
+    allTechniciansRecordsSection.hidden = true;
+    newActivitySection.hidden = true;
+    techniciansListSection.hidden = true;
+    technicianManagementSection.hidden = true;
+    hoursRecordsSection.hidden = true;
+
+    exportMessage.textContent = "";
+    exportAreaFilter.value = "todos";
 });
 
 
