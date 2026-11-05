@@ -151,26 +151,45 @@
 
                 <div class="hours-list-header">
 
-                    <div>
-                        <h2 id="hours-list-title">Registros de horas extras</h2>
-                        <p>Consulta de actividades registradas y estado de revisión.</p>
-                    </div>
+    <div>
+        <h2 id="hours-list-title">Registros de horas extras</h2>
+        <p>Consulta de actividades registradas y estado de revisión.</p>
+    </div>
 
-                    <!-- FILTRO SOLO PARA ADMINISTRADOR -->
-                    <div id="hours-technician-filter-container"
-                        class="summary-filter" hidden>
+    <!-- FILTROS SOLO PARA ADMINISTRADOR -->
+    <div class="export-controls">
 
-                        <label for="hours-technician-filter">
-                            Filtrar por técnico
-                        </label>
+        <!-- FILTRO POR ÁREA -->
+        <div id="hours-area-filter-container" class="form-group" hidden>
 
-                        <select id="hours-technician-filter">
-                            <option value="">Todos los técnicos</option>
-                        </select>
+            <label for="hours-area-filter">
+                Filtrar por área
+            </label>
 
-                    </div>
+            <select id="hours-area-filter">
+                <option value="todos">Todas las áreas</option>
+                <option value="Radio">Radio</option>
+                <option value="WiFi">WiFi</option>
+            </select>
 
-                </div>
+        </div>
+
+        <!-- FILTRO POR TÉCNICO -->
+        <div id="hours-technician-filter-container" class="form-group" hidden>
+
+            <label for="hours-technician-filter">
+                Filtrar por técnico
+            </label>
+
+            <select id="hours-technician-filter">
+                <option value="">Todos los técnicos</option>
+            </select>
+
+        </div>
+
+    </div>
+
+</div>
 
 
                 <div class="table-container">
