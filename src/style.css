@@ -820,3 +820,13 @@ button:disabled {
     border-radius: 5px;
     font-weight: bold;
 }
+.hours-filters {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.hours-filters .summary-filter {
+    min-width: 200px;
+}
