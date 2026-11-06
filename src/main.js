@@ -289,9 +289,13 @@ function obtenerRangoMes(mesSeleccionado) {
 }
 
 function obtenerClaseHoras(total) {
-    if (total >= 20) return "hours-danger";
-    if (total >= 15 && total <= 17) return "hours-warning";
-    return "hours-normal";
+    const t = Number(total || 0);
+    if (t > 30) return "hours-31-40";
+    if (t > 25) return "hours-25-30";
+    if (t > 20) return "hours-21-25";
+    if (t > 15) return "hours-16-20";
+    if (t > 10) return "hours-11-15";
+    return "hours-0-10";
 }
 
 function formatearHoras(total) {
@@ -2151,7 +2155,7 @@ function mostrarRegistrosEnTabla() {
 
             botonRevisar.type = "button";
             botonRevisar.textContent = "Revisar";
-            botonRevisar.className = "action-button edit-button";
+            botonRevisar.className = "action-button review-button";
 
             botonRevisar.addEventListener(
                 "click",
