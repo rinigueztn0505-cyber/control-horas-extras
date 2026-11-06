@@ -795,79 +795,31 @@ async function cargarTecnicosParaRegistro() {
     hoursTechnicianSelect.innerHTML =
         '<option value="">Seleccione un usuario</option>';
 
-    // Consultar técnicos activos.
-    const { data: tecnicos, error } = await supabase
+    // Cargar técnicos Y administradores activos
+    const { data: perfiles, error } = await supabase
         .from("perfiles")
-        .select("id, nombre_completo, usuario, area")
-        .eq("rol", "tecnico")
+        .select("id, nombre_completo, usuario, area, rol")
+        .in("rol", ["tecnico", "administrador"])
         .eq("activo", true)
         .order("nombre_completo", { ascending: true });
 
     if (error) {
-        console.error("Error cargando técnicos para registro:", error);
+        console.error("Error cargando usuarios para registro:", error);
         mostrarMensaje(hoursMessage, "No se pudo cargar la lista de usuarios.");
         return false;
     }
 
-    // Agregar los técnicos activos al selector.
-    (tecnicos || []).forEach(tecnico => {
+    (perfiles || []).forEach(perfil => {
         const opcion = document.createElement("option");
-        opcion.value = tecnico.id;
-        opcion.dataset.area = tecnico.area || "";
-        opcion.textContent =
-            `${tecnico.nombre_completo} (${tecnico.usuario})`;
-
+        opcion.value = perfil.id;
+        opcion.dataset.area = perfil.area || "";
+        opcion.textContent = perfil.rol === "administrador"
+            ? `${perfil.nombre_completo} (${perfil.usuario}) - Admin`
+            : `${perfil.nombre_completo} (${perfil.usuario})`;
         hoursTechnicianSelect.appendChild(opcion);
     });
 
-    // Agregar al administrador que inició sesión.
-    if (perfilActual?.rol === "administrador" && usuarioActual) {
-        const opcionAdministrador = document.createElement("option");
-
-        opcionAdministrador.value = usuarioActual.id;
-        opcionAdministrador.dataset.area = perfilActual.area || "";
-        opcionAdministrador.textContent =
-            `Mis horas: ${perfilActual.nombre_completo}`;
-
-        hoursTechnicianSelect.appendChild(opcionAdministrador);
-    }
-
     return true;
-}
-
-
-function actualizarFiltroTecnicos() {
-    if (perfilActual?.rol !== "administrador") return;
-
-    const valorAnterior = hoursTechnicianFilter.value;
-
-    hoursTechnicianFilter.innerHTML =
-        '<option value="">Todos los usuarios</option>';
-
-    // Incluir técnicos y administradores.
-    perfilesExportacion.forEach(perfil => {
-        const opcion = document.createElement("option");
-
-        opcion.value = perfil.id;
-
-        const rol = perfil.rol === "administrador"
-            ? "Administrador"
-            : "Técnico";
-
-        opcion.textContent =
-            `${perfil.nombre_completo} (${rol} - ${perfil.area || "Sin área"})`;
-
-        hoursTechnicianFilter.appendChild(opcion);
-    });
-
-    // Conservar la selección anterior si todavía existe.
-    const opcionExiste = Array.from(
-        hoursTechnicianFilter.options
-    ).some(opcion => opcion.value === valorAnterior);
-
-    if (opcionExiste) {
-        hoursTechnicianFilter.value = valorAnterior;
-    }
 }
 
 
