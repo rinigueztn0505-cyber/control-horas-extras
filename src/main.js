@@ -301,7 +301,7 @@ async function obtenerRegistrosDelMes(mesSeleccionado) {
     return data || [];
 }
 
-async function cargarResumenAdministrador() {
+
     const mesSeleccionado = summaryMonthInput.value;
     if (!mesSeleccionado) return;
 
@@ -388,6 +388,142 @@ async function cargarResumenAdministrador() {
 
         adminSummaryTableBody.innerHTML = "";
         const fila = adminSummaryTableBody.insertRow();
+async function cargarResumenAdministrador() {
+    if (!adminSummaryTableBody || !adminSummaryTotal) return;
+
+    const mesSeleccionado = summaryMonthInput.value;
+    const areaSeleccionada = summaryAreaFilter?.value || "todos";
+
+    if (!mesSeleccionado) return;
+
+    // Filtrar técnicos según el área seleccionada.
+    const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
+        if (areaSeleccionada === "todos") return true;
+
+        return (
+            tecnico.area === areaSeleccionada ||
+            tecnico.area === "Ambas"
+        );
+    });
+
+    try {
+        const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
+
+        const acumulados = new Map();
+
+        tecnicosFiltrados.forEach(tecnico => {
+            acumulados.set(tecnico.id, 0);
+        });
+
+        registrosMes.forEach(registro => {
+            if (!acumulados.has(registro.tecnico_id)) return;
+
+            const horasActuales = acumulados.get(registro.tecnico_id) || 0;
+
+            acumulados.set(
+                registro.tecnico_id,
+                horasActuales + Number(registro.total_horas || 0)
+            );
+        });
+
+        adminSummaryTableBody.innerHTML = "";
+
+        let totalGeneral = 0;
+
+        // Obtener las áreas que se mostrarán.
+        const areas = areaSeleccionada === "todos"
+            ? ["Radio", "WiFi"]
+            : [areaSeleccionada];
+
+        areas.forEach(area => {
+
+            const tecnicosArea = tecnicosFiltrados.filter(tecnico => {
+                return tecnico.area === area ||
+                    tecnico.area === "Ambas";
+            });
+
+            // Encabezado del área.
+            const filaArea = adminSummaryTableBody.insertRow();
+            const celdaArea = crearCelda(filaArea, `ÁREA: ${area}`);
+
+            celdaArea.colSpan = 3;
+            celdaArea.classList.add("summary-area-header");
+
+            let subtotalArea = 0;
+
+            if (tecnicosArea.length === 0) {
+                const filaVacia = adminSummaryTableBody.insertRow();
+
+                crearCelda(
+                    filaVacia,
+                    "No hay técnicos registrados en esta área."
+                ).colSpan = 3;
+            } else {
+
+                tecnicosArea.forEach(tecnico => {
+
+                    const total = Number(
+                        (acumulados.get(tecnico.id) || 0).toFixed(2)
+                    );
+
+                    subtotalArea += total;
+
+                    const fila = adminSummaryTableBody.insertRow();
+
+                    crearCelda(fila, tecnico.nombre_completo);
+                    crearCelda(fila, tecnico.usuario);
+
+                    const celdaTotal = crearCelda(
+                        fila,
+                        formatearHoras(total)
+                    );
+
+                    celdaTotal.classList.add(
+                        "hours-total-cell",
+                        obtenerClaseHoras(total)
+                    );
+                });
+            }
+
+            // Subtotal del área.
+            subtotalArea = Number(subtotalArea.toFixed(2));
+
+            const filaSubtotal = adminSummaryTableBody.insertRow();
+
+            crearCelda(
+                filaSubtotal,
+                `SUBTOTAL ${area.toUpperCase()}`
+            ).colSpan = 2;
+
+            const celdaSubtotal = crearCelda(
+                filaSubtotal,
+                formatearHoras(subtotalArea)
+            );
+
+            celdaSubtotal.classList.add(
+                "hours-total-cell",
+                obtenerClaseHoras(subtotalArea)
+            );
+
+            totalGeneral += subtotalArea;
+        });
+
+        // Total general.
+        adminSummaryTotal.textContent = formatearHoras(totalGeneral);
+
+        adminSummaryTotal.className =
+            `hours-total-cell ${obtenerClaseHoras(totalGeneral)}`;
+
+    } catch (error) {
+
+        console.error(
+            "Error al generar resumen del administrador:",
+            error
+        );
+
+        adminSummaryTableBody.innerHTML = "";
+
+        const fila = adminSummaryTableBody.insertRow();
 
         crearCelda(
             fila,
@@ -397,33 +533,6 @@ async function cargarResumenAdministrador() {
         adminSummaryTotal.textContent = "0.00 h";
     }
 }
-
-async function cargarResumenTecnico() {
-    const mesSeleccionado = technicianSummaryMonthInput.value;
-    if (!mesSeleccionado || !usuarioActual) return;
-
-    technicianHoursTotalValue.textContent = "Calculando...";
-
-    try {
-        const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
-        let total = 0;
-
-        registrosMes.forEach(registro => {
-            if (registro.tecnico_id === usuarioActual.id) {
-                total += Number(registro.total_horas || 0);
-            }
-        });
-
-        total = Number(total.toFixed(2));
-        technicianHoursTotalValue.textContent = formatearHoras(total);
-        technicianHoursTotal.className = `hours-total-box ${obtenerClaseHoras(total)}`;
-    } catch (error) {
-        console.error("Error cargando el resumen del técnico:", error);
-        technicianHoursTotalValue.textContent = "No disponible";
-        technicianHoursTotal.className = "hours-total-box";
-    }
-}
-
 async function actualizarResumenHoras() {
     if (!perfilActual) return;
 

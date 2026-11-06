@@ -240,52 +240,62 @@
 
 
             <!-- RESUMEN MENSUAL PARA ADMINISTRADOR -->
-            <section id="admin-hours-summary"
-                class="hours-summary" hidden>
+<section id="admin-hours-summary"
+    class="hours-summary" hidden>
 
-                <div class="summary-header">
+    <div class="summary-header">
 
-                    <div>
-                        <h3>Resumen mensual por técnico</h3>
-                        <p>Acumulado de horas extras registradas en el mes seleccionado.</p>
-                    </div>
+        <div>
+            <h3>Resumen mensual por área y técnico</h3>
+            <p>Acumulado de horas extras del mes seleccionado.</p>
+        </div>
 
-                    <div class="summary-month">
-                        <label for="summary-month">Mes de consulta</label>
-                        <input type="month" id="summary-month">
-                    </div>
+        <div class="summary-month">
 
-                </div>
+            <label for="summary-month">Mes de consulta</label>
+            <input type="month" id="summary-month">
 
+            <label for="summary-area-filter">Filtrar por área</label>
+            <select id="summary-area-filter">
+                <option value="todos">Todas las áreas</option>
+                <option value="Radio">Radio</option>
+                <option value="WiFi">WiFi</option>
+            </select>
 
-                <div class="table-container">
+        </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Técnico</th>
-                                <th>Usuario</th>
-                                <th>Total de horas</th>
-                            </tr>
-                        </thead>
+    </div>
 
-                        <tbody id="admin-summary-table-body">
-                            <tr>
-                                <td colspan="3">Cargando resumen...</td>
-                            </tr>
-                        </tbody>
+    <div class="table-container">
 
-                        <tfoot>
-                            <tr class="summary-total-row">
-                                <th colspan="2">TOTAL GENERAL</th>
-                                <th id="admin-summary-total">0.00 h</th>
-                            </tr>
-                        </tfoot>
-                    </table>
+        <table>
 
-                </div>
+            <thead>
+                <tr>
+                    <th>Técnico</th>
+                    <th>Usuario</th>
+                    <th>Total de horas</th>
+                </tr>
+            </thead>
 
-            </section>
+            <tbody id="admin-summary-table-body">
+                <tr>
+                    <td colspan="3">Cargando resumen...</td>
+                </tr>
+            </tbody>
+
+            <tfoot>
+                <tr class="summary-total-row">
+                    <th colspan="2">TOTAL GENERAL</th>
+                    <th id="admin-summary-total">0.00 h</th>
+                </tr>
+            </tfoot>
+
+        </table>
+
+    </div>
+
+</section>
 
 
             <!-- RESUMEN MENSUAL PARA TÉCNICO -->
