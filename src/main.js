@@ -88,6 +88,7 @@ const hoursListTitle = document.getElementById("hours-list-title");
 // Resúmenes
 const adminHoursSummary = document.getElementById("admin-hours-summary");
 const summaryMonthInput = document.getElementById("summary-month");
+const summaryAreaFilter = document.getElementById("summary-area-filter");
 const adminSummaryTableBody = document.getElementById("admin-summary-table-body");
 const adminSummaryTotal = document.getElementById("admin-summary-total");
 
@@ -96,7 +97,6 @@ const technicianSummaryMonthInput = document.getElementById("technician-summary-
 const technicianHoursTotal = document.getElementById("technician-hours-total");
 const technicianHoursTotalValue = document.getElementById("technician-hours-total-value");
 
-// Filtro de registros
 // Filtros de registros
 const hoursAreaFilterContainer = document.getElementById("hours-area-filter-container");
 const hoursAreaFilter = document.getElementById("hours-area-filter");
@@ -305,6 +305,19 @@ async function cargarResumenAdministrador() {
     const mesSeleccionado = summaryMonthInput.value;
     if (!mesSeleccionado) return;
 
+    // Obtener el área seleccionada.
+    const areaSeleccionada = summaryAreaFilter?.value || "todos";
+
+    // Filtrar técnicos según el área.
+    const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
+        if (areaSeleccionada === "todos") return true;
+
+        return (
+            tecnico.area === areaSeleccionada ||
+            tecnico.area === "Ambas"
+        );
+    });
+
     adminSummaryTableBody.innerHTML = "";
     const filaCarga = adminSummaryTableBody.insertRow();
     crearCelda(filaCarga, "Calculando resumen...").colSpan = 3;
@@ -313,10 +326,17 @@ async function cargarResumenAdministrador() {
         const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
         const acumulados = new Map();
 
-        tecnicosCargados.forEach(tecnico => acumulados.set(tecnico.id, 0));
+        // Inicializar el acumulado de cada técnico filtrado.
+        tecnicosFiltrados.forEach(tecnico => {
+            acumulados.set(tecnico.id, 0);
+        });
 
+        // Sumar las horas del mes.
         registrosMes.forEach(registro => {
+            if (!acumulados.has(registro.tecnico_id)) return;
+
             const horasActuales = acumulados.get(registro.tecnico_id) || 0;
+
             acumulados.set(
                 registro.tecnico_id,
                 horasActuales + Number(registro.total_horas || 0)
@@ -326,30 +346,54 @@ async function cargarResumenAdministrador() {
         adminSummaryTableBody.innerHTML = "";
         let totalGeneral = 0;
 
-        if (tecnicosCargados.length === 0) {
+        if (tecnicosFiltrados.length === 0) {
             const fila = adminSummaryTableBody.insertRow();
-            crearCelda(fila, "No hay técnicos registrados.").colSpan = 3;
+            crearCelda(
+                fila,
+                "No hay técnicos registrados para el área seleccionada."
+            ).colSpan = 3;
         } else {
-            tecnicosCargados.forEach(tecnico => {
-                const total = Number((acumulados.get(tecnico.id) || 0).toFixed(2));
+            tecnicosFiltrados.forEach(tecnico => {
+                const total = Number(
+                    (acumulados.get(tecnico.id) || 0).toFixed(2)
+                );
+
                 totalGeneral += total;
 
                 const fila = adminSummaryTableBody.insertRow();
+
                 crearCelda(fila, tecnico.nombre_completo);
                 crearCelda(fila, tecnico.usuario);
 
-                const celdaTotal = crearCelda(fila, formatearHoras(total));
-                celdaTotal.classList.add("hours-total-cell", obtenerClaseHoras(total));
+                const celdaTotal = crearCelda(
+                    fila,
+                    formatearHoras(total)
+                );
+
+                celdaTotal.classList.add(
+                    "hours-total-cell",
+                    obtenerClaseHoras(total)
+                );
             });
         }
 
+        // Actualizar el total general según el área seleccionada.
         adminSummaryTotal.textContent = formatearHoras(totalGeneral);
-        adminSummaryTotal.className = `hours-total-cell ${obtenerClaseHoras(totalGeneral)}`;
+
+        adminSummaryTotal.className =
+            `hours-total-cell ${obtenerClaseHoras(totalGeneral)}`;
+
     } catch (error) {
         console.error("Error al generar resumen del administrador:", error);
+
         adminSummaryTableBody.innerHTML = "";
         const fila = adminSummaryTableBody.insertRow();
-        crearCelda(fila, "No se pudo cargar el resumen mensual.").colSpan = 3;
+
+        crearCelda(
+            fila,
+            "No se pudo cargar el resumen mensual."
+        ).colSpan = 3;
+
         adminSummaryTotal.textContent = "0.00 h";
     }
 }
@@ -1105,8 +1149,7 @@ async function configurarModuloHoras() {
         if (exportHoursCsvButton) exportHoursCsvButton.hidden = true;
 
         hoursModuleDescription.textContent =
-            hoursModuleDescription.textContent =
-            "Puede registrar sus propias horas extras o las de cualquier técnico activo, incluso cuando el plazo ordinario del caso haya vencido.";
+            "Puede registrar sus propias horas extras, siempre que el plazo ordinario del caso esté vigente.";
         hoursListTitle.textContent = "Mis registros de horas extras";
 
         activityDateInput.value = obtenerFechaLocal();
@@ -1149,6 +1192,11 @@ async function configurarModuloHoras() {
 // =========================================
 
 summaryMonthInput.addEventListener("change", cargarResumenAdministrador);
+
+if (summaryAreaFilter) {
+    summaryAreaFilter.addEventListener("change", cargarResumenAdministrador);
+}
+
 technicianSummaryMonthInput.addEventListener("change", cargarResumenTecnico);
 
 hoursTechnicianFilter.addEventListener("change", mostrarRegistrosEnTabla);
@@ -1156,7 +1204,9 @@ hoursTechnicianFilter.addEventListener("change", mostrarRegistrosEnTabla);
 if (hoursAreaFilter) {
     hoursAreaFilter.addEventListener("change", mostrarRegistrosEnTabla);
 }
-
+if (summaryAreaFilter) {
+    summaryAreaFilter.value = "todos";
+}
 // =========================================
 // EDITAR REGISTRO
 // =========================================
@@ -1674,9 +1724,9 @@ function mostrarRegistrosEnTabla() {
 
     if (perfilActual?.rol === "administrador") {
 
-        // Mapa para consultar el área de cada técnico.
-        const tecnicosPorId = new Map(
-            tecnicosCargados.map(tecnico => [tecnico.id, tecnico])
+       // Mapa para consultar el área de todos los perfiles.
+        const perfilesPorId = new Map(
+            perfilesExportacion.map(perfil => [perfil.id, perfil])
         );
 
         // Filtro por área.
@@ -1684,8 +1734,12 @@ function mostrarRegistrosEnTabla() {
 
         if (areaSeleccionada !== "todos") {
             registros = registros.filter(registro => {
-                const tecnico = tecnicosPorId.get(registro.tecnico_id);
-                return tecnico?.area === areaSeleccionada;
+                 const perfil = perfilesPorId.get(registro.tecnico_id);
+
+                return (
+                    perfil?.area === areaSeleccionada ||
+                    perfil?.area === "Ambas"
+                );
             });
         }
 
@@ -1996,7 +2050,10 @@ logoutButton.addEventListener("click", async () => {
     hoursTechnicianFilter.innerHTML = '<option value="">Todos los técnicos</option>';
 
     if (hoursAreaFilter) {
-    hoursAreaFilter.value = "todos";
+        hoursAreaFilter.value = "todos";
+    }
+    if (summaryAreaFilter) {
+        summaryAreaFilter.value = "todos";
     }
     if (techniciansTableBody) techniciansTableBody.innerHTML = "";
     if (techniciansListTableBody) techniciansListTableBody.innerHTML = "";
