@@ -1,4 +1,3 @@
-
 /* =========================================
    1. CONFIGURACIÓN GENERAL
 ========================================= */
@@ -875,4 +874,140 @@ button:disabled {
 
 .pagination-container span {
     font-weight: 600;
+}
+
+/* =========================================
+   23. BOTONES REVISAR / EDITAR / ELIMINAR
+   Corrección: antes tenían color #fff sin fondo,
+   por eso no se veía el texto.
+========================================= */
+
+#hours-table-body .action-button {
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 11px;
+    margin: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Revisar - Verde */
+#hours-table-body .action-button.review-button {
+    background-color: #059669;
+    color: #ffffff;
+}
+
+/* Editar - Azul */
+#hours-table-body .action-button.edit-button {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+/* Eliminar - Rojo */
+#hours-table-body .action-button.delete-button {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+#hours-table-body .action-button:hover {
+    filter: brightness(0.88);
+}
+
+/* =========================================
+   24. COLORES DEL RESUMEN MENSUAL
+   Por total de horas del usuario
+========================================= */
+
+.hours-total-cell {
+    font-weight: 700;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 10px;
+    white-space: nowrap;
+}
+
+/* 0 a 10 - Verde */
+.hours-total-cell.hours-0-10,
+.hours-total.hours-0-10 {
+    background-color: #22c55e;
+    color: #ffffff;
+    border: 2px solid #16a34a;
+}
+
+/* 11 a 15 - Amarillo */
+.hours-total-cell.hours-11-15,
+.hours-total.hours-11-15 {
+    background-color: #facc15;
+    color: #000000;
+    border: 2px solid #eab308;
+}
+
+/* 16 a 20 - Rojo */
+.hours-total-cell.hours-16-20,
+.hours-total.hours-16-20 {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: 2px solid #b91c1c;
+}
+
+/* 21 a 25 - Rojo con borde amarillo */
+.hours-total-cell.hours-21-25,
+.hours-total.hours-21-25 {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: 3px solid #facc15;
+}
+
+/* 25 a 30 - Rojo con borde negro */
+.hours-total-cell.hours-25-30,
+.hours-total.hours-25-30 {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: 3px solid #000000;
+}
+
+/* 31 a 40 - Negro con letras rojas */
+.hours-total-cell.hours-31-40,
+.hours-total.hours-31-40 {
+    background-color: #000000;
+    color: #ef4444;
+    border: 2px solid #000000;
+}
+
+/* Encabezado del área en el resumen */
+.summary-area-header {
+    background-color: #edf3f8;
+    color: #173b5c;
+    font-weight: bold;
+}
+
+td:has(> .hours-total-cell) {
+    text-align: center;
+    background: transparent !important;
+}
+/* TOTAL GENERAL alineado con la columna Total de horas */
+.hours-total-box {
+    display: grid !important;
+    grid-template-columns: 1fr 200px 300px;
+    align-items: center;
+    padding: 12px 15px;
+    gap: 0;
+}
+
+.hours-total-box > span {
+    grid-column: 1 / 3;
+    text-align: left;
+}
+
+#admin-summary-total.hours-total-cell {
+    grid-column: 3;
+    justify-self: center;
+    margin: 0;
+}
+
+/* Que las pastillitas de la tabla también queden centradas en su columna */
+.hours-summary table td:nth-child(3) {
+    text-align: center;
 }

@@ -438,15 +438,12 @@ async function cargarResumenAdministrador() {
                     crearCelda(fila, tecnico.nombre_completo);
                     crearCelda(fila, tecnico.usuario);
 
-                    const celdaTotal = crearCelda(
-                        fila,
-                        formatearHoras(total)
-                    );
-
-                    celdaTotal.classList.add(
-                        "hours-total-cell",
-                        obtenerClaseHoras(total)
-                    );
+                    const celdaTotal = crearCelda(fila, "");
+                    celdaTotal.style.textAlign = "center";
+                    const badge = document.createElement("span");
+                    badge.textContent = formatearHoras(total);
+                    badge.className = `hours-total-cell ${obtenerClaseHoras(total)}`;
+                    celdaTotal.appendChild(badge);
                 });
             }
 
@@ -465,15 +462,12 @@ async function cargarResumenAdministrador() {
                 `SUBTOTAL ${area.toUpperCase()}`
             ).colSpan = 2;
 
-            const celdaSubtotal = crearCelda(
-                filaSubtotal,
-                formatearHoras(subtotalArea)
-            );
-
-            celdaSubtotal.classList.add(
-                "hours-total-cell",
-                obtenerClaseHoras(subtotalArea)
-            );
+            const celdaSubtotal = crearCelda(filaSubtotal, "");
+            celdaSubtotal.style.textAlign = "center";
+            const badgeSubtotal = document.createElement("span");
+            badgeSubtotal.textContent = formatearHoras(subtotalArea);
+            badgeSubtotal.className = `hours-total-cell ${obtenerClaseHoras(subtotalArea)}`;
+            celdaSubtotal.appendChild(badgeSubtotal);
         });
 
         // Calcular el total general sumando cada registro una sola vez.
