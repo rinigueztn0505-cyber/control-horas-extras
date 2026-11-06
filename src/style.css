@@ -489,6 +489,11 @@ button:disabled {
 }
 
 #hours-table-body td:nth-child(6) {
+    white-space: nowrap;
+}
+
+#hours-table-body td:nth-child(7),
+#hours-table-body td:nth-child(8) {
     min-width: 220px;
     white-space: normal;
 }
@@ -841,4 +846,33 @@ button:disabled {
         width: 100%;
     }
 
+}
+
+/* =========================================
+   PAGINACIÓN DE REGISTROS DE HORAS
+========================================= */
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.pagination-container button {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.pagination-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-container span {
+    font-weight: 600;
 }
