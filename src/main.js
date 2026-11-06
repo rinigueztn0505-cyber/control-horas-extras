@@ -68,6 +68,7 @@ const hoursFormContainer = document.getElementById("hours-form-container");
 const hoursForm = document.getElementById("hours-form");
 const technicianSelectContainer = document.getElementById("technician-select-container");
 const hoursTechnicianSelect = document.getElementById("hours-technician");
+const activityAreaInput = document.getElementById("activity-area");
 
 const caseNumberInput = document.getElementById("case-number");
 const caseGenerationDateInput = document.getElementById("case-generation-date");
@@ -260,16 +261,23 @@ function restablecerFormularioHoras(mostrarFecha = true) {
 
     
 }
+
 // =========================================
 // FUNCIONES DEL RESUMEN DE HORAS
 // =========================================
 
 function obtenerRangoMes(mesSeleccionado) {
     const [anio, mes] = mesSeleccionado.split("-").map(Number);
-    const fechaInicio = `${anio}-${String(mes).padStart(2, "0")}-01`;
+
+    const fechaInicio =
+        `${anio}-${String(mes).padStart(2, "0")}-01`;
+
     const siguienteAnio = mes === 12 ? anio + 1 : anio;
     const siguienteMes = mes === 12 ? 1 : mes + 1;
-    const fechaFin = `${siguienteAnio}-${String(siguienteMes).padStart(2, "0")}-01`;
+
+    const fechaFin =
+        `${siguienteAnio}-${String(siguienteMes).padStart(2, "0")}-01`;
+
     return { fechaInicio, fechaFin };
 }
 
@@ -284,11 +292,12 @@ function formatearHoras(total) {
 }
 
 async function obtenerRegistrosDelMes(mesSeleccionado) {
-    const { fechaInicio, fechaFin } = obtenerRangoMes(mesSeleccionado);
+    const { fechaInicio, fechaFin } =
+        obtenerRangoMes(mesSeleccionado);
 
     const { data, error } = await supabase
         .from("registros_horas_extras")
-        .select("id, tecnico_id, total_horas, fecha_actividad, estado")
+        .select("id, tecnico_id, area, total_horas, fecha_actividad, estado")
         .eq("estado", "registrada")
         .gte("fecha_actividad", fechaInicio)
         .lt("fecha_actividad", fechaFin);
@@ -301,41 +310,53 @@ async function obtenerRegistrosDelMes(mesSeleccionado) {
     return data || [];
 }
 
+// =========================================
+// RESUMEN MENSUAL DEL ADMINISTRADOR
+// =========================================
+
+async function cargarResumenAdministrador() {
+
+    if (!adminSummaryTableBody || !adminSummaryTotal) return;
+    if (!summaryMonthInput || !summaryAreaFilter) return;
 
     const mesSeleccionado = summaryMonthInput.value;
+    const areaSeleccionada = summaryAreaFilter.value || "todos";
+
     if (!mesSeleccionado) return;
-
-    // Obtener el área seleccionada.
-    const areaSeleccionada = summaryAreaFilter?.value || "todos";
-
-    // Filtrar técnicos según el área.
-    const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
-        if (areaSeleccionada === "todos") return true;
-
-        return (
-            tecnico.area === areaSeleccionada ||
-            tecnico.area === "Ambas"
-        );
-    });
 
     adminSummaryTableBody.innerHTML = "";
-    const filaCarga = adminSummaryTableBody.insertRow();
-    crearCelda(filaCarga, "Calculando resumen...").colSpan = 3;
 
     try {
-        const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
+
+        // Obtener registros correspondientes al mes seleccionado.
+        const registrosMes =
+            await obtenerRegistrosDelMes(mesSeleccionado);
+
+        // Filtrar técnicos según el área seleccionada.
+        const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
+
+            if (areaSeleccionada === "todos") return true;
+
+            return (
+                tecnico.area === areaSeleccionada ||
+                tecnico.area === "Ambas"
+            );
+        });
+
+        // Inicializar acumulados por técnico.
         const acumulados = new Map();
 
-        // Inicializar el acumulado de cada técnico filtrado.
         tecnicosFiltrados.forEach(tecnico => {
             acumulados.set(tecnico.id, 0);
         });
 
-        // Sumar las horas del mes.
+        // Sumar las horas de cada técnico.
         registrosMes.forEach(registro => {
+
             if (!acumulados.has(registro.tecnico_id)) return;
 
-            const horasActuales = acumulados.get(registro.tecnico_id) || 0;
+            const horasActuales =
+                acumulados.get(registro.tecnico_id) || 0;
 
             acumulados.set(
                 registro.tecnico_id,
@@ -343,121 +364,45 @@ async function obtenerRegistrosDelMes(mesSeleccionado) {
             );
         });
 
-        adminSummaryTableBody.innerHTML = "";
-        let totalGeneral = 0;
-
-        if (tecnicosFiltrados.length === 0) {
-            const fila = adminSummaryTableBody.insertRow();
-            crearCelda(
-                fila,
-                "No hay técnicos registrados para el área seleccionada."
-            ).colSpan = 3;
-        } else {
-            tecnicosFiltrados.forEach(tecnico => {
-                const total = Number(
-                    (acumulados.get(tecnico.id) || 0).toFixed(2)
-                );
-
-                totalGeneral += total;
-
-                const fila = adminSummaryTableBody.insertRow();
-
-                crearCelda(fila, tecnico.nombre_completo);
-                crearCelda(fila, tecnico.usuario);
-
-                const celdaTotal = crearCelda(
-                    fila,
-                    formatearHoras(total)
-                );
-
-                celdaTotal.classList.add(
-                    "hours-total-cell",
-                    obtenerClaseHoras(total)
-                );
-            });
-        }
-
-        // Actualizar el total general según el área seleccionada.
-        adminSummaryTotal.textContent = formatearHoras(totalGeneral);
-
-        adminSummaryTotal.className =
-            `hours-total-cell ${obtenerClaseHoras(totalGeneral)}`;
-
-    } catch (error) {
-        console.error("Error al generar resumen del administrador:", error);
-
-        adminSummaryTableBody.innerHTML = "";
-        const fila = adminSummaryTableBody.insertRow();
-async function cargarResumenAdministrador() {
-    if (!adminSummaryTableBody || !adminSummaryTotal) return;
-
-    const mesSeleccionado = summaryMonthInput.value;
-    const areaSeleccionada = summaryAreaFilter?.value || "todos";
-
-    if (!mesSeleccionado) return;
-
-    // Filtrar técnicos según el área seleccionada.
-    const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
-        if (areaSeleccionada === "todos") return true;
-
-        return (
-            tecnico.area === areaSeleccionada ||
-            tecnico.area === "Ambas"
-        );
-    });
-
-    try {
-        const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
-
-        const acumulados = new Map();
-
-        tecnicosFiltrados.forEach(tecnico => {
-            acumulados.set(tecnico.id, 0);
-        });
-
-        registrosMes.forEach(registro => {
-            if (!acumulados.has(registro.tecnico_id)) return;
-
-            const horasActuales = acumulados.get(registro.tecnico_id) || 0;
-
-            acumulados.set(
-                registro.tecnico_id,
-                horasActuales + Number(registro.total_horas || 0)
-            );
-        });
-
-        adminSummaryTableBody.innerHTML = "";
-
-        let totalGeneral = 0;
-
-        // Obtener las áreas que se mostrarán.
+        // Determinar las áreas que se mostrarán.
         const areas = areaSeleccionada === "todos"
             ? ["Radio", "WiFi"]
             : [areaSeleccionada];
 
+        // Limpiar tabla antes de mostrar resultados.
+        adminSummaryTableBody.innerHTML = "";
+
         areas.forEach(area => {
 
-            const tecnicosArea = tecnicosFiltrados.filter(tecnico => {
-                return tecnico.area === area ||
-                    tecnico.area === "Ambas";
-            });
+            // Técnicos pertenecientes al área seleccionada.
+            // Los técnicos de área "Ambas" aparecen en las dos áreas.
+            const tecnicosArea = tecnicosFiltrados.filter(tecnico =>
+                tecnico.area === area || tecnico.area === "Ambas"
+            );
+
+            let subtotalArea = 0;
 
             // Encabezado del área.
             const filaArea = adminSummaryTableBody.insertRow();
-            const celdaArea = crearCelda(filaArea, `ÁREA: ${area}`);
+
+            const celdaArea = crearCelda(
+                filaArea,
+                `ÁREA: ${area}`
+            );
 
             celdaArea.colSpan = 3;
             celdaArea.classList.add("summary-area-header");
 
-            let subtotalArea = 0;
-
             if (tecnicosArea.length === 0) {
-                const filaVacia = adminSummaryTableBody.insertRow();
+
+                const filaVacia =
+                    adminSummaryTableBody.insertRow();
 
                 crearCelda(
                     filaVacia,
                     "No hay técnicos registrados en esta área."
                 ).colSpan = 3;
+
             } else {
 
                 tecnicosArea.forEach(tecnico => {
@@ -488,7 +433,8 @@ async function cargarResumenAdministrador() {
             // Subtotal del área.
             subtotalArea = Number(subtotalArea.toFixed(2));
 
-            const filaSubtotal = adminSummaryTableBody.insertRow();
+            const filaSubtotal =
+                adminSummaryTableBody.insertRow();
 
             crearCelda(
                 filaSubtotal,
@@ -504,12 +450,17 @@ async function cargarResumenAdministrador() {
                 "hours-total-cell",
                 obtenerClaseHoras(subtotalArea)
             );
-
-            totalGeneral += subtotalArea;
         });
 
-        // Total general.
-        adminSummaryTotal.textContent = formatearHoras(totalGeneral);
+        // Total general sin duplicar técnicos de área "Ambas".
+        const totalGeneral = Number(
+            [...acumulados.values()]
+                .reduce((suma, horas) => suma + horas, 0)
+                .toFixed(2)
+        );
+
+        adminSummaryTotal.textContent =
+            formatearHoras(totalGeneral);
 
         adminSummaryTotal.className =
             `hours-total-cell ${obtenerClaseHoras(totalGeneral)}`;
@@ -533,11 +484,60 @@ async function cargarResumenAdministrador() {
         adminSummaryTotal.textContent = "0.00 h";
     }
 }
+
+// =========================================
+// RESUMEN MENSUAL DEL TÉCNICO
+// =========================================
+
+async function cargarResumenTecnico() {
+    if (!perfilActual || perfilActual.rol !== "tecnico") return;
+    if (!technicianSummaryMonthInput || !technicianHoursTotalValue) return;
+
+    const mesSeleccionado = technicianSummaryMonthInput.value;
+
+    if (!mesSeleccionado) return;
+
+    technicianHoursTotalValue.textContent = "Calculando...";
+
+    try {
+        const registrosMes = await obtenerRegistrosDelMes(mesSeleccionado);
+
+        const registrosTecnico = registrosMes.filter(
+            registro => registro.tecnico_id === usuarioActual.id
+        );
+
+        const totalHoras = Number(
+            registrosTecnico.reduce(
+                (suma, registro) =>
+                    suma + Number(registro.total_horas || 0),
+                0
+            ).toFixed(2)
+        );
+
+        technicianHoursTotalValue.textContent = formatearHoras(totalHoras);
+
+        if (technicianHoursTotal) {
+            technicianHoursTotal.className =
+                `hours-total-cell ${obtenerClaseHoras(totalHoras)}`;
+        }
+
+    } catch (error) {
+        console.error("Error cargando resumen del técnico:", error);
+        technicianHoursTotalValue.textContent = "No disponible";
+    }
+}
+
+// =========================================
+// ACTUALIZAR RESUMEN SEGÚN EL ROL
+// =========================================
+
 async function actualizarResumenHoras() {
+
     if (!perfilActual) return;
 
     if (perfilActual.rol === "administrador") {
         await cargarResumenAdministrador();
+
     } else if (perfilActual.rol === "tecnico") {
         await cargarResumenTecnico();
     }
@@ -776,7 +776,7 @@ async function cargarTecnicosParaRegistro() {
     // Consultar técnicos activos.
     const { data: tecnicos, error } = await supabase
         .from("perfiles")
-        .select("id, nombre_completo, usuario")
+        .select("id, nombre_completo, usuario, area")
         .eq("rol", "tecnico")
         .eq("activo", true)
         .order("nombre_completo", { ascending: true });
@@ -791,6 +791,7 @@ async function cargarTecnicosParaRegistro() {
     (tecnicos || []).forEach(tecnico => {
         const opcion = document.createElement("option");
         opcion.value = tecnico.id;
+        opcion.dataset.area = tecnico.area || "";
         opcion.textContent =
             `${tecnico.nombre_completo} (${tecnico.usuario})`;
 
@@ -802,6 +803,7 @@ async function cargarTecnicosParaRegistro() {
         const opcionAdministrador = document.createElement("option");
 
         opcionAdministrador.value = usuarioActual.id;
+        opcionAdministrador.dataset.area = perfilActual.area || "";
         opcionAdministrador.textContent =
             `Mis horas: ${perfilActual.nombre_completo}`;
 
@@ -1531,8 +1533,46 @@ hoursForm.addEventListener("submit", async event => {
     const horaFin = endTimeInput.value;
     const actividad = activityDescriptionInput.value.trim();
     const observaciones = activityObservationsInput.value.trim();
+    const area = activityAreaInput.value;
 
-    const tecnicoId = esAdministrador ? hoursTechnicianSelect.value : usuarioActual.id;
+    const tecnicoId = esAdministrador 
+    ? hoursTechnicianSelect.value 
+    : usuarioActual.id;
+
+    // Validar el área seleccionada.
+    if (!["Radio", "WiFi"].includes(area)) {
+    mostrarMensaje(
+        hoursMessage, 
+        "Seleccione el área donde se realizó la actividad."
+    );
+    return;
+}
+
+// Obtener el área asignada al técnico.
+let areaTecnico = "";
+
+if (esTecnico || tecnicoId === usuarioActual.id) {
+    areaTecnico = perfilActual.area || "";
+} else {
+    const tecnicoSeleccionado = tecnicosCargados.find(
+        tecnico => tecnico.id === tecnicoId
+    );
+
+    areaTecnico = tecnicoSeleccionado?.area || "";
+}
+
+if (
+    areaTecnico &&
+    areaTecnico !== "Ambas" &&
+    areaTecnico !== area
+) {
+    mostrarMensaje(
+        hoursMessage,
+        `El técnico seleccionado pertenece al área ${areaTecnico}. No puede registrar actividades en ${area}.`
+    );
+    return;
+}
+    
 
     if (
         !numeroCaso ||
@@ -1598,6 +1638,7 @@ hoursForm.addEventListener("submit", async event => {
 
         const nuevoRegistro = {
             tecnico_id: tecnicoId,
+            area: area,
             numero_caso: numeroCaso,
             fecha_generacion_caso: fechaGeneracion,
             fecha_actividad: fechaActividad,

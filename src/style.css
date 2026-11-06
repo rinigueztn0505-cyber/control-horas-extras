@@ -32,9 +32,6 @@ button:disabled {
     cursor: not-allowed;
 }
 
-[hidden] {
-    display: none !important;
-}
 
 
 /* =========================================
@@ -432,6 +429,7 @@ button:disabled {
 .table-container {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid #e0e7ef;
     border-radius: 8px;
 }
@@ -508,7 +506,7 @@ button:disabled {
     border-radius: 9px;
 }
 
-.hours-summary-header {
+.summary-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -517,27 +515,22 @@ button:disabled {
     margin-bottom: 20px;
 }
 
-.hours-summary-header h3 {
-    color: #173b5c;
-    font-size: 17px;
-    margin: 0;
-}
-
-.hours-summary-filters {
+.summary-month {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.hours-summary-filters label {
+.summary-month label {
     font-size: 13px;
     font-weight: bold;
     color: #344256;
 }
 
-.hours-summary-filters select {
-    min-width: 190px;
+.summary-month input,
+.summary-month select {
+    min-width: 150px;
     padding: 10px 12px;
     border: 1px solid #d5dde7;
     border-radius: 7px;
@@ -546,46 +539,6 @@ button:disabled {
     font-size: 13px;
 }
 
-.hours-summary-table {
-    width: 100%;
-    min-width: 450px;
-    border-collapse: collapse;
-    background-color: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.hours-summary-table th,
-.hours-summary-table td {
-    padding: 13px 15px;
-    border-bottom: 1px solid #e8edf2;
-    text-align: left;
-    font-size: 13px;
-}
-
-.hours-summary-table th {
-    background-color: #edf3f8;
-    color: #173b5c;
-}
-
-.hours-summary-table td:last-child,
-.hours-summary-table th:last-child {
-    text-align: center;
-    white-space: nowrap;
-}
-
-.hours-summary-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.hours-summary-table .total-row {
-    background-color: #edf3f8;
-    font-weight: bold;
-}
-
-.hours-summary-table .total-row td {
-    color: #173b5c;
-}
 
 
 /* =========================================
@@ -758,6 +711,18 @@ button:disabled {
         flex-direction: column;
     }
 
+    .dashboard-header h1 {
+        font-size: 20px;
+    }
+
+    .dashboard-header p {
+        font-size: 13px;
+    }
+
+    #logout-button {
+        width: 100%;
+    }
+
 }
 
 
@@ -829,4 +794,51 @@ button:disabled {
 
 .hours-filters .summary-filter {
     min-width: 200px;
+}
+.hours-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e7ef;
+    border-radius: 9px;
+}
+
+.hours-total-box span {
+    color: #344256;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.hours-total-box strong {
+    color: #173b5c;
+    font-size: 20px;
+}
+
+/* =========================================
+   22. ADAPTACIÓN DEL RESUMEN EN CELULARES
+========================================= */
+
+@media (max-width: 700px) {
+
+    .summary-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .summary-month {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .summary-month input,
+    .summary-month select {
+        width: 100%;
+    }
+
 }
