@@ -365,7 +365,7 @@ async function cargarResumenAdministrador() {
 
         // Determinar las áreas que se mostrarán.
         const areas = areaSeleccionada === "todos"
-            ? ["Radio", "WiFi", "Sin área"]
+            ? ["Radio", "WiFi"]
             : [areaSeleccionada];
 
         // Recorrer cada área.
@@ -728,6 +728,22 @@ function mostrarTecnicosGestion() {
     });
 }
 
+function actualizarFiltroTecnicos() {
+    if (!hoursTechnicianFilter) return;
+
+    hoursTechnicianFilter.innerHTML = '<option value="">Todos los técnicos</option>';
+
+    perfilesExportacion.forEach(perfil => {
+        const opcion = document.createElement("option");
+        opcion.value = perfil.id;
+        opcion.textContent = perfil.rol === "administrador"
+            ? `${perfil.nombre_completo} (${perfil.usuario}) - Admin`
+            : `${perfil.nombre_completo} (${perfil.usuario})`;
+        hoursTechnicianFilter.appendChild(opcion);
+    });
+}
+
+
 async function cargarTecnicos() {
     if (techniciansTableBody) techniciansTableBody.innerHTML = "";
     if (techniciansListTableBody) techniciansListTableBody.innerHTML = "";
@@ -992,7 +1008,7 @@ function exportarHorasCSV() {
     // Filtrar por el área real de cada actividad.
     const registrosFiltrados = registrosCargados.filter(registro => {
         if (areaSeleccionada === "todos") {
-            return true;
+            return registro.area === "Radio" || registro.area === "WiFi";
         }
 
         return registro.area === areaSeleccionada;
