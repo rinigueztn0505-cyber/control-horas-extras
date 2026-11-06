@@ -114,118 +114,135 @@
         </section>
 
 
-        <!-- =================================================
-             1. REGISTROS DE TODOS LOS TÉCNICOS
-             ================================================= -->
-        <section class="dashboard-content" id="all-technicians-records-section" hidden>
+        
+<!-- =================================================
+     1. REGISTROS DE TODOS LOS TÉCNICOS
+     ================================================= -->
+<section class="dashboard-content" id="all-technicians-records-section" hidden>
 
-            <div class="module-header">
-                <div>
-                    <h2>Registros de todos los técnicos</h2>
-                    <p>Consulta y exportación de registros por área de trabajo.</p>
-                </div>
+    <div class="module-header">
+        <div>
+            <h2>Registros de todos los técnicos</h2>
+            <p>Consulta y exportación de registros por área de trabajo.</p>
+        </div>
 
-                <div class="export-controls">
+        <div class="export-controls">
 
-                    <div class="form-group">
-                        <label for="export-area-filter">Área para exportar</label>
-
-                        <select id="export-area-filter">
-                            <option value="todos">Todas las áreas</option>
-                            <option value="Radio">Radio</option>
-                            <option value="WiFi">WiFi</option>
-                        </select>
-                    </div>
-
-                    <button type="button" id="export-hours-csv-button">
-                        Exportar CSV
-                    </button>
-
-                </div>
+            <div class="form-group">
+                <label for="export-area-filter">Área para exportar</label>
+                <select id="export-area-filter">
+                    <option value="todos">Todas las áreas</option>
+                    <option value="Radio">Radio</option>
+                    <option value="WiFi">WiFi</option>
+                </select>
             </div>
 
-            <p id="export-message" class="form-message"></p>
-
-
-            <!-- TABLA DE REGISTROS DE HORAS EXTRAS -->
-            <div id="hours-records-section" class="hours-list" hidden>
-
-                <div class="hours-list-header">
-
-    <div>
-        <h2 id="hours-list-title">Registros de horas extras</h2>
-        <p>Consulta de actividades registradas y estado de revisión.</p>
-    </div>
-
-    <!-- FILTROS SOLO PARA ADMINISTRADOR -->
-    <div class="export-controls">
-
-        <!-- FILTRO POR ÁREA -->
-        <div id="hours-area-filter-container" class="form-group" hidden>
-
-            <label for="hours-area-filter">
-                Filtrar por área
-            </label>
-
-            <select id="hours-area-filter">
-                <option value="todos">Todas las áreas</option>
-                <option value="Radio">Radio</option>
-                <option value="WiFi">WiFi</option>
-            </select>
+            <button type="button" id="export-hours-csv-button">
+                Exportar CSV
+            </button>
 
         </div>
-
-        <!-- FILTRO POR TÉCNICO -->
-        <div id="hours-technician-filter-container" class="form-group" hidden>
-
-            <label for="hours-technician-filter">
-                Filtrar por técnico
-            </label>
-
-            <select id="hours-technician-filter">
-                <option value="">Todos los técnicos</option>
-            </select>
-
-        </div>
-
     </div>
 
-</div>
+    <p id="export-message" class="form-message"></p>
 
+    <!-- TABLA DE REGISTROS DE HORAS EXTRAS -->
+    <div id="hours-records-section" class="hours-list" hidden>
 
-                <div class="table-container">
+        <div class="hours-list-header">
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>N.º de caso</th>
-                                <th>Fecha generación</th>
-                                <th>Fecha actividad</th>
-                                <th>Técnico</th>
-                                <th>Horario</th>
-                                <th>Total horas</th>
-                                <th>Descripción</th>
-                                <th>Observaciones</th>
-                                <th>Registrado por</th>
-                                <th>Estado</th>
-                                <th>Revisión</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
+            <div>
+                <h2 id="hours-list-title">Registros de horas extras</h2>
+                <p>Consulta de actividades registradas y estado de revisión.</p>
+            </div>
 
-                        <tbody id="hours-table-body">
-                            <tr>
-                                <td colspan="12">Cargando registros...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- FILTROS Y ORDENAMIENTO -->
+            <div class="export-controls">
 
+                <!-- FILTRO POR ÁREA -->
+                <div id="hours-area-filter-container" class="form-group" hidden>
+                    <label for="hours-area-filter">Filtrar por área</label>
+
+                    <select id="hours-area-filter">
+                        <option value="todos">Todas las áreas</option>
+                        <option value="Radio">Radio</option>
+                        <option value="WiFi">WiFi</option>
+                    </select>
+                </div>
+
+                <!-- FILTRO POR TÉCNICO O ADMINISTRADOR -->
+                <div id="hours-technician-filter-container" class="form-group" hidden>
+                    <label for="hours-technician-filter">Filtrar por usuario</label>
+
+                    <select id="hours-technician-filter">
+                        <option value="">Todos los usuarios</option>
+                    </select>
+                </div>
+
+                <!-- ORDENAR POR HORAS EXTRAS -->
+                <div class="form-group">
+                    <label for="hours-sort-filter">Ordenar por horas extras</label>
+
+                    <select id="hours-sort-filter">
+                        <option value="desc">Mayor a menor</option>
+                        <option value="asc">Menor a mayor</option>
+                    </select>
                 </div>
 
             </div>
 
-        </section>
+        </div>
 
+        <!-- TABLA -->
+        <div class="table-container">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N.º de caso</th>
+                        <th>Fecha generación</th>
+                        <th>Fecha actividad</th>
+                        <th>Técnico</th>
+                        <th>Horario</th>
+                        <th>Total horas</th>
+                        <th>Descripción</th>
+                        <th>Observaciones</th>
+                        <th>Registrado por</th>
+                        <th>Estado</th>
+                        <th>Revisión</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody id="hours-table-body">
+                    <tr>
+                        <td colspan="12">Cargando registros...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- PAGINACIÓN DE REGISTROS -->
+        <div id="hours-records-pagination" class="pagination-container">
+
+            <button type="button" id="hours-prev-page" disabled>
+                Anterior
+            </button>
+
+            <span id="hours-page-info">
+                Página 1 de 1
+            </span>
+
+            <button type="button" id="hours-next-page" disabled>
+                Siguiente
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
 
         <!-- =================================================
              2. CONTROL DE HORAS EXTRAS
@@ -368,6 +385,32 @@
 
                             <select id="hours-technician" name="tecnico_id">
                                 <option value="">Seleccione un técnico</option>
+                            </select>
+
+                        </div>
+                        <!-- ÁREA A LA QUE CORRESPONDE LA ACTIVIDAD -->
+<div class="form-group">
+    <label for="activity-area">
+        Área donde se realizó la actividad
+    </label>
+    <select id="activity-area" name="area" required>
+        <option value="">Seleccione un área</option>
+        <option value="Radio">Radio</option>
+        <option value="WiFi">WiFi</option>
+    </select>
+</div>
+
+                        <!-- ÁREA A LA QUE CORRESPONDE LA ACTIVIDAD -->
+                        <div class="form-group">
+
+                            <label for="activity-area">
+                                Área donde se realizó la actividad
+                            </label>
+
+                            <select id="activity-area" name="area" required>
+                                <option value="">Seleccione un área</option>
+                                <option value="Radio">Radio</option>
+                                <option value="WiFi">WiFi</option>
                             </select>
 
                         </div>
