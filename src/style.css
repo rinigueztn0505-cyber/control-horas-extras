@@ -987,27 +987,32 @@ td:has(> .hours-total-cell) {
     text-align: center;
     background: transparent !important;
 }
-/* TOTAL GENERAL alineado con la columna Total de horas */
+/* Pastillitas chiquitas y centradas, sin agrandar la celda */
 .hours-total-box {
-    display: grid !important;
-    grid-template-columns: 1fr 200px 300px;
+    display: flex !important;
+    justify-content: space-between;
     align-items: center;
     padding: 12px 15px;
-    gap: 0;
 }
 
-.hours-total-box > span {
-    grid-column: 1 / 3;
-    text-align: left;
+/* Centrar todas las pastillitas de la tabla */
+.hours-summary table td:has(> .hours-total-cell) {
+    text-align: center !important;
 }
 
-#admin-summary-total.hours-total-cell {
-    grid-column: 3;
-    justify-self: center;
-    margin: 0;
-}
-
-/* Que las pastillitas de la tabla también queden centradas en su columna */
-.hours-summary table td:nth-child(3) {
+.hours-total-cell {
+    display: inline-block !important;
+    width: auto !important;
+    min-width: 80px;
+    padding: 6px 14px;
+    border-radius: 6px;
     text-align: center;
+    white-space: nowrap;
+}
+
+/* Total general igual de chiquito, solo se corre para que centre con las de arriba */
+#admin-summary-total.hours-total-cell {
+    flex: none !important;
+    margin: 0;
+    margin-right: 45px;
 }
