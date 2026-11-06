@@ -5,6 +5,13 @@
 import { supabase } from "./supabase.js";
 
 // =========================================
+// PAGINACIÓN DE REGISTROS DE HORAS
+// =========================================
+
+let paginaRegistrosHorasActual = 1;
+const registrosHorasPorPagina = 10;
+
+// =========================================
 // ELEMENTOS DE LA INTERFAZ
 // =========================================
 
@@ -314,6 +321,7 @@ async function obtenerRegistrosDelMes(mesSeleccionado) {
 // RESUMEN MENSUAL DEL ADMINISTRADOR
 // =========================================
 
+
 async function cargarResumenAdministrador() {
 
     if (!adminSummaryTableBody || !adminSummaryTotal) return;
@@ -328,90 +336,98 @@ async function cargarResumenAdministrador() {
 
     try {
 
-        // Obtener registros correspondientes al mes seleccionado.
+        // Obtener los registros del mes seleccionado.
         const registrosMes =
             await obtenerRegistrosDelMes(mesSeleccionado);
 
-        // Filtrar técnicos según el área seleccionada.
-        const tecnicosFiltrados = tecnicosCargados.filter(tecnico => {
+        // Crear un mapa de técnicos por identificador.
+        const tecnicosPorId = new Map(
+            perfilesExportacion.map(perfil => [perfil.id, perfil])
+        );
 
-            if (areaSeleccionada === "todos") return true;
+        // Filtrar registros por área REAL de la actividad.
+        const registrosFiltrados = registrosMes.filter(registro => {
 
-            return (
-                tecnico.area === areaSeleccionada ||
-                tecnico.area === "Ambas"
-            );
-        });
+            // Solo considerar técnicos cargados.
+            if (!tecnicosPorId.has(registro.tecnico_id)) {
+                return false;
+            }
 
-        // Inicializar acumulados por técnico.
-        const acumulados = new Map();
+            // Si se seleccionó Todos, incluir todos los registros.
+            if (areaSeleccionada === "todos") {
+                return true;
+            }
 
-        tecnicosFiltrados.forEach(tecnico => {
-            acumulados.set(tecnico.id, 0);
-        });
-
-        // Sumar las horas de cada técnico.
-        registrosMes.forEach(registro => {
-
-            if (!acumulados.has(registro.tecnico_id)) return;
-
-            const horasActuales =
-                acumulados.get(registro.tecnico_id) || 0;
-
-            acumulados.set(
-                registro.tecnico_id,
-                horasActuales + Number(registro.total_horas || 0)
-            );
+            // Si se seleccionó Radio o WiFi,
+            // incluir exclusivamente esa área.
+            return registro.area === areaSeleccionada;
         });
 
         // Determinar las áreas que se mostrarán.
         const areas = areaSeleccionada === "todos"
-            ? ["Radio", "WiFi"]
+            ? ["Radio", "WiFi", "Sin área"]
             : [areaSeleccionada];
 
-        // Limpiar tabla antes de mostrar resultados.
-        adminSummaryTableBody.innerHTML = "";
-
+        // Recorrer cada área.
         areas.forEach(area => {
 
-            // Técnicos pertenecientes al área seleccionada.
-            // Los técnicos de área "Ambas" aparecen en las dos áreas.
-            const tecnicosArea = tecnicosFiltrados.filter(tecnico =>
-                tecnico.area === area || tecnico.area === "Ambas"
-            );
+            // Obtener los registros correspondientes a esta área.
+            const registrosArea = registrosFiltrados.filter(registro => {
 
-            let subtotalArea = 0;
+                const areaRegistro =
+                    registro.area === "Radio" || registro.area === "WiFi"
+                        ? registro.area
+                        : "Sin área";
+
+                return areaRegistro === area;
+            });
+
+            // Acumular horas por técnico dentro de esta área.
+            const acumulados = new Map();
+
+            registrosArea.forEach(registro => {
+
+                const horasActuales =
+                    acumulados.get(registro.tecnico_id) || 0;
+
+                acumulados.set(
+                    registro.tecnico_id,
+                    horasActuales + Number(registro.total_horas || 0)
+                );
+            });
 
             // Encabezado del área.
             const filaArea = adminSummaryTableBody.insertRow();
 
             const celdaArea = crearCelda(
                 filaArea,
-                `ÁREA: ${area}`
+                `ÁREA: ${area.toUpperCase()}`
             );
 
             celdaArea.colSpan = 3;
             celdaArea.classList.add("summary-area-header");
 
-            if (tecnicosArea.length === 0) {
+            // Mostrar mensaje si no existen registros.
+            if (acumulados.size === 0) {
 
                 const filaVacia =
                     adminSummaryTableBody.insertRow();
 
                 crearCelda(
                     filaVacia,
-                    "No hay técnicos registrados en esta área."
+                    "No hay registros de actividades en esta área."
                 ).colSpan = 3;
 
             } else {
 
-                tecnicosArea.forEach(tecnico => {
+                // Mostrar cada técnico con horas registradas.
+                acumulados.forEach((horas, tecnicoId) => {
 
-                    const total = Number(
-                        (acumulados.get(tecnico.id) || 0).toFixed(2)
-                    );
+                    const tecnico = tecnicosPorId.get(tecnicoId);
 
-                    subtotalArea += total;
+                    if (!tecnico) return;
+
+                    const total = Number(horas.toFixed(2));
 
                     const fila = adminSummaryTableBody.insertRow();
 
@@ -430,8 +446,12 @@ async function cargarResumenAdministrador() {
                 });
             }
 
-            // Subtotal del área.
-            subtotalArea = Number(subtotalArea.toFixed(2));
+            // Calcular subtotal de esta área.
+            const subtotalArea = Number(
+                [...acumulados.values()]
+                    .reduce((suma, horas) => suma + horas, 0)
+                    .toFixed(2)
+            );
 
             const filaSubtotal =
                 adminSummaryTableBody.insertRow();
@@ -452,11 +472,13 @@ async function cargarResumenAdministrador() {
             );
         });
 
-        // Total general sin duplicar técnicos de área "Ambas".
+        // Calcular el total general sumando cada registro una sola vez.
         const totalGeneral = Number(
-            [...acumulados.values()]
-                .reduce((suma, horas) => suma + horas, 0)
-                .toFixed(2)
+            registrosFiltrados.reduce(
+                (suma, registro) =>
+                    suma + Number(registro.total_horas || 0),
+                0
+            ).toFixed(2)
         );
 
         adminSummaryTotal.textContent =
@@ -813,23 +835,41 @@ async function cargarTecnicosParaRegistro() {
     return true;
 }
 
+
 function actualizarFiltroTecnicos() {
     if (perfilActual?.rol !== "administrador") return;
 
     const valorAnterior = hoursTechnicianFilter.value;
-    hoursTechnicianFilter.innerHTML = '<option value="">Todos los técnicos</option>';
 
-    tecnicosCargados.forEach(tecnico => {
+    hoursTechnicianFilter.innerHTML =
+        '<option value="">Todos los usuarios</option>';
+
+    // Incluir técnicos y administradores.
+    perfilesExportacion.forEach(perfil => {
         const opcion = document.createElement("option");
-        opcion.value = tecnico.id;
-        opcion.textContent = `${tecnico.nombre_completo} (${tecnico.usuario})`;
+
+        opcion.value = perfil.id;
+
+        const rol = perfil.rol === "administrador"
+            ? "Administrador"
+            : "Técnico";
+
+        opcion.textContent =
+            `${perfil.nombre_completo} (${rol} - ${perfil.area || "Sin área"})`;
+
         hoursTechnicianFilter.appendChild(opcion);
     });
 
-    if (valorAnterior && tecnicosCargados.some(tecnico => tecnico.id === valorAnterior)) {
+    // Conservar la selección anterior si todavía existe.
+    const opcionExiste = Array.from(
+        hoursTechnicianFilter.options
+    ).some(opcion => opcion.value === valorAnterior);
+
+    if (opcionExiste) {
         hoursTechnicianFilter.value = valorAnterior;
     }
 }
+
 
 // =========================================
 // CREAR Y EDITAR TÉCNICOS
@@ -899,10 +939,15 @@ technicianForm.addEventListener("submit", async event => {
         return;
     }
 
-    if (!["Radio", "WiFi"].includes(area)) {
-        mostrarMensaje(technicianMessage, "Selecciona un área válida: Radio o WiFi.");
-        return;
+    
+    if (!["Radio", "WiFi", "Ambas"].includes(area)) {
+        mostrarMensaje(
+            technicianMessage,
+            "Selecciona un área válida: Radio, WiFi o Ambas."
+        );
+         return;
     }
+
 
     if (!tecnicoEnEdicion && !usuario) {
         mostrarMensaje(technicianMessage, "Ingresa el nombre de usuario.");
@@ -970,39 +1015,35 @@ technicianForm.addEventListener("submit", async event => {
 
 function exportarHorasCSV() {
     if (perfilActual?.rol !== "administrador") {
-        mostrarMensaje(exportMessage, "No tienes permisos para exportar estos registros.");
+        mostrarMensaje(
+            exportMessage,
+            "No tienes permisos para exportar estos registros."
+        );
         return;
     }
 
-    const areaSeleccionada = exportAreaFilter.value;
+    const areaSeleccionada = exportAreaFilter?.value || "todos";
 
     if (perfilesExportacion.length === 0) {
-        mostrarMensaje(exportMessage, "No se encontraron perfiles para exportar.", "error");
+        mostrarMensaje(
+            exportMessage,
+            "No se encontraron perfiles para exportar.",
+            "error"
+        );
         return;
     }
 
-    // Filtrar perfiles según el área seleccionada.
-    // Los perfiles con área "Ambas" se incluyen en Radio y WiFi.
-    const perfilesFiltrados = perfilesExportacion.filter(perfil => {
-        if (areaSeleccionada === "todos") return true;
+    const perfilesPorId = new Map(
+        perfilesExportacion.map(perfil => [perfil.id, perfil])
+    );
 
-        return perfil.area === areaSeleccionada || perfil.area === "Ambas";
-    });
-
-    if (perfilesFiltrados.length === 0) {
-        mostrarMensaje(exportMessage, "No existen perfiles para el área seleccionada.", "info");
-        return;
-    }
-
-    // Agrupar registros por perfil.
-    const registrosPorPerfil = new Map();
-
-    registrosCargados.forEach(registro => {
-        if (!registrosPorPerfil.has(registro.tecnico_id)) {
-            registrosPorPerfil.set(registro.tecnico_id, []);
+    // Filtrar por el área real de cada actividad.
+    const registrosFiltrados = registrosCargados.filter(registro => {
+        if (areaSeleccionada === "todos") {
+            return true;
         }
 
-        registrosPorPerfil.get(registro.tecnico_id).push(registro);
+        return registro.area === areaSeleccionada;
     });
 
     const encabezados = [
@@ -1024,12 +1065,56 @@ function exportarHorasCSV() {
 
     const filas = [];
 
-    // Recorrer todos los perfiles, incluso los que no tienen registros.
-    perfilesFiltrados.forEach(perfil => {
-        const registrosPerfil = registrosPorPerfil.get(perfil.id) || [];
+    // Una fila por cada actividad registrada.
+    registrosFiltrados.forEach(registro => {
+        const perfil = perfilesPorId.get(registro.tecnico_id);
 
-        // Si el perfil no tiene registros, generar una fila con 0.00 horas.
-        if (registrosPerfil.length === 0) {
+        if (!perfil) {
+            console.warn(
+                "No se encontró el perfil del registro:",
+                registro.id
+            );
+            return;
+        }
+
+        const registrador =
+            perfilesCargados.get(registro.registrado_por);
+
+        filas.push([
+            registro.fecha_actividad,
+            registro.numero_caso,
+            perfil.nombre_completo,
+            perfil.usuario,
+            perfil.rol,
+            registro.area || "Sin área",
+            String(registro.hora_inicio || "").slice(0, 5),
+            String(registro.hora_fin || "").slice(0, 5),
+            Number(
+                registro.total_horas ??
+                calcularHoras(
+                    registro.hora_inicio,
+                    registro.hora_fin
+                )
+            ).toFixed(2),
+            registro.actividad || "",
+            registro.observaciones || "",
+            registrador?.nombre_completo ||
+                nombresUsuarios.get(registro.registrado_por) || "",
+            registro.estado || "",
+            registro.revisado ? "Sí" : "No"
+        ]);
+    });
+
+    // En la exportación Todos, incluir perfiles sin registros.
+    if (areaSeleccionada === "todos") {
+
+        const perfilesConRegistros = new Set(
+            registrosFiltrados.map(registro => registro.tecnico_id)
+        );
+
+        perfilesExportacion.forEach(perfil => {
+            if (perfilesConRegistros.has(perfil.id)) return;
+
             filas.push([
                 "",
                 "",
@@ -1046,38 +1131,18 @@ function exportarHorasCSV() {
                 "",
                 "No"
             ]);
-
-            return;
-        }
-
-        // Si tiene varios registros, generar una fila por cada uno.
-        registrosPerfil.forEach(registro => {
-            const registrador = perfilesCargados.get(registro.registrado_por);
-
-            filas.push([
-                registro.fecha_actividad,
-                registro.numero_caso,
-                perfil.nombre_completo,
-                perfil.usuario,
-                perfil.rol,
-                perfil.area || "Sin asignar",
-                String(registro.hora_inicio || "").slice(0, 5),
-                String(registro.hora_fin || "").slice(0, 5),
-                Number(
-                    registro.total_horas ||
-                    calcularHoras(registro.hora_inicio, registro.hora_fin)
-                ).toFixed(2),
-                registro.actividad || "",
-                registro.observaciones || "",
-                registrador?.nombre_completo ||
-                    nombresUsuarios.get(registro.registrado_por) || "",
-                registro.estado || "",
-                registro.revisado ? "Sí" : "No"
-            ]);
         });
-    });
+    }
 
-    // Construir el contenido CSV.
+    if (filas.length === 0) {
+        mostrarMensaje(
+            exportMessage,
+            "No hay registros para el área seleccionada.",
+            "info"
+        );
+        return;
+    }
+
     const contenidoCSV = [encabezados, ...filas]
         .map(fila => fila.map(escaparCSV).join(";"))
         .join("\r\n");
@@ -1091,7 +1156,9 @@ function exportarHorasCSV() {
     const enlace = document.createElement("a");
 
     const nombreArea =
-        areaSeleccionada === "todos" ? "Todos" : areaSeleccionada;
+        areaSeleccionada === "todos"
+            ? "Todos"
+            : areaSeleccionada;
 
     enlace.href = url;
     enlace.download =
@@ -1103,41 +1170,54 @@ function exportarHorasCSV() {
 
     URL.revokeObjectURL(url);
 
+    const cantidadPerfiles = new Set(
+        registrosFiltrados.map(registro => registro.tecnico_id)
+    ).size;
+
     mostrarMensaje(
         exportMessage,
-        `Exportación completada: ${filas.length} filas correspondientes a ${perfilesFiltrados.length} perfiles.`,
+        `Exportación completada: ${filas.length} filas. Perfiles con registros: ${cantidadPerfiles}.`,
         "success"
     );
 }
- 
-
 
 
 exportHoursCsvButton.addEventListener("click", exportarHorasCSV);
+
 
 // =========================================
 // DETECCIÓN DE CRUCES DE HORARIOS
 // =========================================
 
-function intervalosSeCruzan(inicioNuevo, finNuevo, inicioExistente, finExistente) {
-    const inicioA = convertirHoraAMinutos(inicioNuevo);
-    let finA = convertirHoraAMinutos(finNuevo);
-    const inicioB = convertirHoraAMinutos(inicioExistente);
-    let finB = convertirHoraAMinutos(finExistente);
+function obtenerMinutosAbsolutos(fecha, hora) {
+    const [anio, mes, dia] = fecha.split("-").map(Number);
+    const [horas, minutos] = String(hora).slice(0, 5).split(":").map(Number);
 
-    if (finA <= inicioA) finA += 1440;
-    if (finB <= inicioB) finB += 1440;
+    const fechaUTC = Date.UTC(anio, mes - 1, dia);
 
-    // Se comparan desplazamientos para contemplar registros que atraviesan medianoche.
-    for (const desplazamiento of [-1440, 0, 1440]) {
-        const inicioComparacion = inicioB + desplazamiento;
-        const finComparacion = finB + desplazamiento;
+    return Math.floor(fechaUTC / 60000) + horas * 60 + minutos;
+}
 
-        // Intervalos semiabiertos: permite que uno comience justo cuando termina otro.
-        if (inicioA < finComparacion && finA > inicioComparacion) return true;
-    }
+function intervalosSeCruzanConFecha(
+    fechaA,
+    inicioA,
+    finA,
+    fechaB,
+    inicioB,
+    finB
+) {
+    const inicioAmin = obtenerMinutosAbsolutos(fechaA, inicioA);
+    let finAmin = obtenerMinutosAbsolutos(fechaA, finA);
 
-    return false;
+    const inicioBmin = obtenerMinutosAbsolutos(fechaB, inicioB);
+    let finBmin = obtenerMinutosAbsolutos(fechaB, finB);
+
+    // Si termina al día siguiente, se suman 24 horas.
+    if (finAmin <= inicioAmin) finAmin += 1440;
+    if (finBmin <= inicioBmin) finBmin += 1440;
+
+    // Permite actividades consecutivas sin considerarlas cruces.
+    return inicioAmin <= finBmin && finAmin >= inicioBmin;
 }
 
 async function buscarCruceHorario({
@@ -1147,27 +1227,61 @@ async function buscarCruceHorario({
     horaFin,
     registroIdExcluir = null
 }) {
+    // Calcular el día anterior a la actividad.
+    const [anio, mes, dia] = fechaActividad.split("-").map(Number);
+
+    const fechaAnterior = new Date(
+        Date.UTC(anio, mes - 1, dia - 1)
+    ).toISOString().slice(0, 10);
+
+    // Consultar registros del día anterior y de la fecha seleccionada.
     const { data: registros, error } = await supabase
         .from("registros_horas_extras")
-        .select("id, numero_caso, actividad, hora_inicio, hora_fin")
+        .select(`
+            id,
+            numero_caso,
+            actividad,
+            fecha_actividad,
+            hora_inicio,
+            hora_fin
+        `)
         .eq("tecnico_id", tecnicoId)
-        .eq("fecha_actividad", fechaActividad);
+        .gte("fecha_actividad", fechaAnterior)
+        .lte("fecha_actividad", fechaActividad);
 
     if (error) {
         console.error("Error verificando cruces de horarios:", error);
-        throw new Error("No se pudo verificar si el horario está disponible. Intenta nuevamente.");
+        throw new Error(
+            "No se pudo verificar si el horario está disponible. Intenta nuevamente."
+        );
     }
 
     for (const registro of (registros || [])) {
-        if (registroIdExcluir && String(registro.id) === String(registroIdExcluir)) continue;
+        // No comparar el registro que se está editando.
+        if (
+            registroIdExcluir &&
+            String(registro.id) === String(registroIdExcluir)
+        ) {
+            continue;
+        }
 
-        if (intervalosSeCruzan(horaInicio, horaFin, registro.hora_inicio, registro.hora_fin)) {
+        const hayCruce = intervalosSeCruzanConFecha(
+            fechaActividad,
+            horaInicio,
+            horaFin,
+            registro.fecha_actividad,
+            registro.hora_inicio,
+            registro.hora_fin
+        );
+
+        if (hayCruce) {
             return {
                 hayCruce: true,
                 mensaje:
                     `El horario se cruza con otra actividad registrada. ` +
                     `Caso: ${registro.numero_caso || "Sin número de caso"}. ` +
                     `Actividad: ${registro.actividad || "Sin descripción"}. ` +
+                    `Fecha: ${registro.fecha_actividad}. ` +
                     `Horario existente: ${String(registro.hora_inicio).slice(0, 5)} a ${String(registro.hora_fin).slice(0, 5)}.`
             };
         }
@@ -1175,6 +1289,7 @@ async function buscarCruceHorario({
 
     return { hayCruce: false, mensaje: "" };
 }
+
 
 // =========================================
 // CAMBIO OBLIGATORIO DE CONTRASEÑA
@@ -1298,7 +1413,7 @@ async function configurarModuloHoras() {
     actualizarMensajePlazo();
 }
 
-// =========================================
+/// =========================================
 // EVENTOS DE RESÚMENES Y FILTROS
 // =========================================
 
@@ -1310,14 +1425,53 @@ if (summaryAreaFilter) {
 
 technicianSummaryMonthInput.addEventListener("change", cargarResumenTecnico);
 
-hoursTechnicianFilter.addEventListener("change", mostrarRegistrosEnTabla);
+// =========================================
+// EVENTOS DE FILTROS DE REGISTROS
+// =========================================
+
+hoursTechnicianFilter.addEventListener("change", () => {
+    paginaRegistrosHorasActual = 1;
+    mostrarRegistrosEnTabla();
+});
 
 if (hoursAreaFilter) {
-    hoursAreaFilter.addEventListener("change", mostrarRegistrosEnTabla);
+    hoursAreaFilter.addEventListener("change", () => {
+        paginaRegistrosHorasActual = 1;
+        mostrarRegistrosEnTabla();
+    });
 }
-if (summaryAreaFilter) {
-    summaryAreaFilter.value = "todos";
-}
+
+// =========================================
+// EVENTOS DE PAGINACIÓN Y ORDENAMIENTO
+// =========================================
+
+const hoursSortFilter = document.getElementById("hours-sort-filter");
+
+const hoursPrevPageButton =
+    document.getElementById("hours-prev-page");
+
+const hoursNextPageButton =
+    document.getElementById("hours-next-page");
+
+// Ordenar registros.
+hoursSortFilter?.addEventListener("change", () => {
+    paginaRegistrosHorasActual = 1;
+    mostrarRegistrosEnTabla();
+});
+
+// Página anterior.
+hoursPrevPageButton?.addEventListener("click", () => {
+    if (paginaRegistrosHorasActual > 1) {
+        paginaRegistrosHorasActual--;
+        mostrarRegistrosEnTabla();
+    }
+});
+
+// Página siguiente.
+hoursNextPageButton?.addEventListener("click", () => {
+    paginaRegistrosHorasActual++;
+    mostrarRegistrosEnTabla();
+});
 // =========================================
 // EDITAR REGISTRO
 // =========================================
@@ -1346,6 +1500,7 @@ async function iniciarEdicionRegistro(registro) {
     caseGenerationDateInput.value = registro.fecha_generacion_caso || "";
     activityDateInput.value = registro.fecha_actividad || "";
     startTimeInput.value = String(registro.hora_inicio || "").slice(0, 5);
+    activityAreaInput.value = registro.area || "";
     endTimeInput.value = String(registro.hora_fin || "").slice(0, 5);
     activityDescriptionInput.value = registro.actividad || "";
     activityObservationsInput.value = registro.observaciones || "";
@@ -1638,6 +1793,7 @@ if (
 
         const nuevoRegistro = {
             tecnico_id: tecnicoId,
+            registrado_por: usuarioActual.id,
             area: area,
             numero_caso: numeroCaso,
             fecha_generacion_caso: fechaGeneracion,
@@ -1649,9 +1805,9 @@ if (
             actividad,
             ubicacion: registroEnEdicion?.ubicacion || null,
             observaciones: observaciones || null,
-            estado: estaEditando ? registroEnEdicion.estado : "registrada"
+            estado: estaEditando ? registroEnEdicion.estado : "registrada",
+            revisado: estaEditando ? registroEnEdicion.revisado : false
         };
-
         if (estaEditando) {
             let consulta = supabase
                 .from("registros_horas_extras")
@@ -1668,7 +1824,8 @@ if (
             const { data: registroActualizado, error } = await consulta
                 .select("id")
                 .single();
-
+            
+            console.log("ERROR UPDATE:", error);    
             if (error) throw error;
             if (!registroActualizado?.id) {
                 throw new Error("No se recibió confirmación de la actualización.");
@@ -1680,7 +1837,7 @@ if (
 
             mostrarMensaje(
                 hoursMessage,
-                `El registro del caso ${numeroCaso} fue actualizado correctamente. No se generaron notificaciones nuevas.`,
+                `El registro del caso ${numeroCaso} fue actualizado correctamente.`,
                 "success"
             );
         } else {
@@ -1689,7 +1846,8 @@ if (
                 .insert(nuevoRegistro)
                 .select("id")
                 .single();
-
+            
+            console.log("ERROR SUPABASE:", error);    
             if (error) throw error;
             if (!registroGuardado?.id) {
                 throw new Error("El registro se guardó, pero no se recibió su identificador.");
@@ -1774,11 +1932,12 @@ if (resetHoursButton) {
 async function cargarRegistrosHoras() {
     hoursTableBody.innerHTML = "";
 
-    const { data: registros, error } = await supabase
+    let consulta = supabase
         .from("registros_horas_extras")
         .select(`
             id,
             tecnico_id,
+            area,
             registrado_por,
             numero_caso,
             fecha_generacion_caso,
@@ -1796,13 +1955,24 @@ async function cargarRegistrosHoras() {
         .order("fecha_actividad", { ascending: false })
         .order("hora_inicio", { ascending: false });
 
+    // Los técnicos únicamente consultan sus propios registros.
+    // El administrador puede consultar todos los registros.
+    if (perfilActual?.rol === "tecnico") {
+        consulta = consulta.eq("tecnico_id", usuarioActual.id);
+    }
+
+    const { data: registros, error } = await consulta;
+
     if (error) {
         console.error("Error consultando registros:", error);
+
         const fila = document.createElement("tr");
         crearCelda(fila, "No se pudieron cargar los registros.").colSpan = 12;
         hoursTableBody.appendChild(fila);
         return;
     }
+
+    // A partir de aquí conserva el resto de tu función original.
 
     registrosCargados = registros || [];
 
@@ -1811,7 +1981,7 @@ async function cargarRegistrosHoras() {
         perfilesCargados.clear();
 
         const fila = document.createElement("tr");
-        const mensaje = perfilActual.rol === "tecnico"
+        const mensaje = perfilActual?.rol === "tecnico"
             ? "Todavía no tienes registros de horas extras."
             : "Todavía no existen registros de horas extras.";
         crearCelda(fila, mensaje).colSpan = 12;
@@ -1863,6 +2033,12 @@ function mostrarRegistrosEnTabla() {
     prepararColumnaAcciones();
     hoursTableBody.innerHTML = "";
 
+    const paginacion = document.getElementById("hours-records-pagination");
+    const paginaInfo = document.getElementById("hours-page-info");
+    const botonAnterior = document.getElementById("hours-prev-page");
+    const botonSiguiente = document.getElementById("hours-next-page");
+    const filtroOrden = document.getElementById("hours-sort-filter");
+
     let registros = [...registrosCargados];
 
     // Los técnicos solamente pueden consultar sus propios registros.
@@ -1872,28 +2048,16 @@ function mostrarRegistrosEnTabla() {
         );
     }
 
+    // Filtros exclusivos del administrador.
     if (perfilActual?.rol === "administrador") {
-
-       // Mapa para consultar el área de todos los perfiles.
-        const perfilesPorId = new Map(
-            perfilesExportacion.map(perfil => [perfil.id, perfil])
-        );
-
-        // Filtro por área.
         const areaSeleccionada = hoursAreaFilter?.value || "todos";
 
         if (areaSeleccionada !== "todos") {
-            registros = registros.filter(registro => {
-                 const perfil = perfilesPorId.get(registro.tecnico_id);
-
-                return (
-                    perfil?.area === areaSeleccionada ||
-                    perfil?.area === "Ambas"
-                );
-            });
+            registros = registros.filter(
+                registro => registro.area === areaSeleccionada
+            );
         }
 
-        // Filtro por técnico.
         const tecnicoSeleccionado = hoursTechnicianFilter.value;
 
         if (tecnicoSeleccionado) {
@@ -1903,6 +2067,19 @@ function mostrarRegistrosEnTabla() {
         }
     }
 
+    // Ordenar por total de horas.
+    const orden = filtroOrden?.value || "desc";
+
+    registros.sort((a, b) => {
+        const horasA = Number(a.total_horas) || 0;
+        const horasB = Number(b.total_horas) || 0;
+
+        return orden === "asc"
+            ? horasA - horasB
+            : horasB - horasA;
+    });
+
+    // Mensaje cuando no existen registros.
     if (registros.length === 0) {
         const fila = document.createElement("tr");
 
@@ -1915,9 +2092,9 @@ function mostrarRegistrosEnTabla() {
             const tecnicoSeleccionado = hoursTechnicianFilter.value;
 
             if (tecnicoSeleccionado && areaSeleccionada !== "todos") {
-                mensaje = "No hay registros para el técnico y el área seleccionados.";
+                mensaje = "No hay registros para el usuario y el área seleccionados.";
             } else if (tecnicoSeleccionado) {
-                mensaje = "No hay registros para el técnico seleccionado.";
+                mensaje = "No hay registros para el usuario seleccionado.";
             } else if (areaSeleccionada !== "todos") {
                 mensaje = `No hay registros para el área ${areaSeleccionada}.`;
             } else {
@@ -1927,28 +2104,65 @@ function mostrarRegistrosEnTabla() {
 
         crearCelda(fila, mensaje).colSpan = 12;
         hoursTableBody.appendChild(fila);
+
+        if (paginacion) paginacion.hidden = true;
+
         return;
     }
 
-    registros.forEach(registro => {
+    // Calcular páginas.
+    const totalPaginas = Math.ceil(
+        registros.length / registrosHorasPorPagina
+    );
+
+    paginaRegistrosHorasActual = Math.min(
+        Math.max(1, paginaRegistrosHorasActual),
+        totalPaginas
+    );
+
+    const inicio = (paginaRegistrosHorasActual - 1) *
+        registrosHorasPorPagina;
+
+    const registrosPagina = registros.slice(
+        inicio,
+        inicio + registrosHorasPorPagina
+    );
+
+    // Mostrar únicamente los registros de la página actual.
+    registrosPagina.forEach(registro => {
         const fila = document.createElement("tr");
 
         crearCelda(fila, registro.numero_caso || "—");
         crearCelda(fila, formatearFecha(registro.fecha_generacion_caso));
         crearCelda(fila, formatearFecha(registro.fecha_actividad));
-        crearCelda(fila, nombresUsuarios.get(registro.tecnico_id) || "No disponible");
+        crearCelda(
+            fila,
+            nombresUsuarios.get(registro.tecnico_id) || "No disponible"
+        );
 
         crearCelda(
             fila,
             `${String(registro.hora_inicio).slice(0, 5)} - ${String(registro.hora_fin).slice(0, 5)}`
         );
 
-        crearCelda(fila, `${Number(registro.total_horas).toFixed(2)} h`);
+        crearCelda(
+            fila,
+            `${Number(registro.total_horas).toFixed(2)} h`
+        );
+
         crearCelda(fila, registro.actividad || "—");
         crearCelda(fila, registro.observaciones || "—");
-        crearCelda(fila, nombresUsuarios.get(registro.registrado_por) || "No disponible");
+
+        crearCelda(
+            fila,
+            nombresUsuarios.get(registro.registrado_por) || "No disponible"
+        );
+
         crearCelda(fila, registro.estado || "—");
-        crearCelda(fila, registro.revisado === true ? "Revisada" : "Pendiente");
+        crearCelda(
+            fila,
+            registro.revisado === true ? "Revisada" : "Pendiente"
+        );
 
         const celdaAcciones = document.createElement("td");
 
@@ -1966,26 +2180,44 @@ function mostrarRegistrosEnTabla() {
 
         if (esAdministrador && registro.revisado !== true) {
             const botonRevisar = document.createElement("button");
+
             botonRevisar.type = "button";
             botonRevisar.textContent = "Revisar";
             botonRevisar.className = "action-button edit-button";
-            botonRevisar.addEventListener("click", () => revisarRegistro(registro));
+
+            botonRevisar.addEventListener(
+                "click",
+                () => revisarRegistro(registro)
+            );
+
             celdaAcciones.appendChild(botonRevisar);
         }
 
         if (puedeModificar) {
             const botonEditar = document.createElement("button");
+
             botonEditar.type = "button";
             botonEditar.textContent = "Editar";
             botonEditar.className = "action-button edit-button";
-            botonEditar.addEventListener("click", () => iniciarEdicionRegistro(registro));
+
+            botonEditar.addEventListener(
+                "click",
+                () => iniciarEdicionRegistro(registro)
+            );
+
             celdaAcciones.appendChild(botonEditar);
 
             const botonEliminar = document.createElement("button");
+
             botonEliminar.type = "button";
             botonEliminar.textContent = "Eliminar";
             botonEliminar.className = "action-button delete-button";
-            botonEliminar.addEventListener("click", () => eliminarRegistro(registro));
+
+            botonEliminar.addEventListener(
+                "click",
+                () => eliminarRegistro(registro)
+            );
+
             celdaAcciones.appendChild(botonEliminar);
         }
 
@@ -1996,8 +2228,27 @@ function mostrarRegistrosEnTabla() {
         fila.appendChild(celdaAcciones);
         hoursTableBody.appendChild(fila);
     });
-}
 
+    // Actualizar controles de paginación.
+    if (paginacion) {
+        paginacion.hidden = false;
+    }
+
+    if (paginaInfo) {
+        paginaInfo.textContent =
+            `Página ${paginaRegistrosHorasActual} de ${totalPaginas} | ` +
+            `${registros.length} registros`;
+    }
+
+    if (botonAnterior) {
+        botonAnterior.disabled = paginaRegistrosHorasActual === 1;
+    }
+
+    if (botonSiguiente) {
+        botonSiguiente.disabled =
+            paginaRegistrosHorasActual === totalPaginas;
+    }
+}
 // =========================================
 // MOSTRAR EL PANEL DEL USUARIO
 // =========================================
