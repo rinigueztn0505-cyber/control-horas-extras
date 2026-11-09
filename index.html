@@ -265,7 +265,7 @@
 
         <div>
             <h3>Resumen mensual por área y técnico</h3>
-            <p>Acumulado de horas extras del mes seleccionado.</p>
+            <p>Acumulado de horas extras revisadas del mes seleccionado. Solo se suman las horas con Revisión: Revisada.</p>
         </div>
 
         <div class="summary-month">
@@ -336,7 +336,7 @@
 
                     <div>
                         <h3>Mis horas extras acumuladas</h3>
-                        <p>Horas registradas durante el mes seleccionado.</p>
+                        <p>Horas revisadas durante el mes seleccionado. Solo se suman las horas que ya fueron revisadas.</p>
                     </div>
 
                     <div class="summary-month">
@@ -473,6 +473,7 @@
                                 id="activity-date"
                                 name="fecha_actividad"
                                 required>
+                               <p id="fecha-feriado-mensaje"></p>
 
                         </div>
 
