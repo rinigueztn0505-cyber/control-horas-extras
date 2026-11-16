@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -7,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sistema de control y registro de horas extras del personal técnico.">
     <title>Control de Horas Extras</title>
-  <script type="module" crossorigin src="/control-horas-extras/assets/index-QAUdG2oM.js"></script>
   <link rel="stylesheet" crossorigin href="/control-horas-extras/assets/index-BSFbxui6.css">
 </head>
 
@@ -36,7 +34,7 @@
                     <div style="position:relative;">
                         <input type="password" id="password" name="password"
                             placeholder="Ingrese su contraseña" autocomplete="current-password" required style="width:100%; padding-right:40px;">
-                        <button type="button" id="toggle-login-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁️</button>
+                        <button type="button" id="toggle-login-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁</button>
                     </div>
                 </div>
 
@@ -52,7 +50,6 @@
 
         </section>
     </main>
-
 
     <!-- CAMBIO OBLIGATORIO DE CONTRASEÑA -->
     <main class="login-container" id="change-password-container" hidden>
@@ -73,7 +70,7 @@
                             placeholder="Ingrese su nueva contraseña"
                             minlength="8" maxlength="128"
                             autocomplete="new-password" required style="width:100%; padding-right:40px;">
-                        <button type="button" id="toggle-new-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁️</button>
+                        <button type="button" id="toggle-new-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁</button>
                     </div>
                 </div>
 
@@ -84,7 +81,7 @@
                             placeholder="Repita la nueva contraseña"
                             minlength="8" maxlength="128"
                             autocomplete="new-password" required style="width:100%; padding-right:40px;">
-                        <button type="button" id="toggle-confirm-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁️</button>
+                        <button type="button" id="toggle-confirm-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁</button>
                     </div>
                 </div>
 
@@ -104,7 +101,6 @@
         </section>
     </main>
 
-
     <!-- PANEL PRINCIPAL -->
     <main class="dashboard-container" id="dashboard-container" hidden>
 
@@ -121,7 +117,6 @@
             <h2 id="welcome-name">Bienvenido</h2>
             <p id="welcome-role"></p>
         </section>
-
 
         
 <!-- =================================================
@@ -265,7 +260,6 @@
                 </div>
             </div>
 
-
             <!-- RESUMEN MENSUAL PARA ADMINISTRADOR -->
 <section id="admin-hours-summary"
     class="hours-summary" hidden>
@@ -320,8 +314,6 @@
 
         </table>
 
-            </table>
-
         <div class="hours-legend">
           <span class="hours-legend-label">Leyenda por total mensual:</span>
           <span class="hours-total-cell hours-0-10">0 - 10 h</span>
@@ -335,7 +327,6 @@
     </div>
 
 </section>
-
 
             <!-- RESUMEN MENSUAL PARA TÉCNICO -->
             <section id="technician-hours-summary"
@@ -358,7 +349,6 @@
 
                 </div>
 
-
                 <div id="technician-hours-total"
                     class="hours-total-box">
 
@@ -374,7 +364,6 @@
 
         </section>
 
-
         <!-- =================================================
              3. REGISTRAR NUEVA ACTIVIDAD
              ================================================= -->
@@ -388,13 +377,11 @@
                 </div>
             </div>
 
-
             <div id="hours-form-container" hidden>
 
                 <form id="hours-form">
 
                     <div class="form-grid">
-
 
                         <!-- SELECCIÓN DE TÉCNICO: SOLO ADMINISTRADOR -->
                         <div class="form-group full-width"
@@ -433,7 +420,6 @@
 
                         </div>
 
-
                         <!-- DATOS DEL CASO -->
                         <div class="form-group">
 
@@ -450,7 +436,6 @@
 
                         </div>
 
-
                         <div class="form-group">
 
                             <label for="case-generation-date">
@@ -464,12 +449,10 @@
 
                         </div>
 
-
                         <div class="form-group full-width">
                             <p id="hours-deadline-message"
                                 class="form-message"></p>
                         </div>
-
 
                         <!-- FECHA Y HORARIO DE ACTIVIDAD -->
                         <div class="form-group">
@@ -486,7 +469,6 @@
 
                         </div>
 
-
                         <div class="form-group">
 
                             <label for="start-time">Hora de inicio</label>
@@ -498,7 +480,6 @@
 
                         </div>
 
-
                         <div class="form-group">
 
                             <label for="end-time">Hora de fin</label>
@@ -509,7 +490,6 @@
                                 required>
 
                         </div>
-
 
                         <!-- DESCRIPCIÓN -->
                         <div class="form-group full-width">
@@ -527,7 +507,6 @@
 
                         </div>
 
-
                         <div class="form-group full-width">
 
                             <label for="activity-observations">
@@ -543,7 +522,6 @@
                         </div>
 
                     </div>
-
 
                     <div class="hours-form-actions">
 
@@ -565,7 +543,6 @@
 
         </section>
 
-
         <!-- =================================================
              4. TÉCNICOS REGISTRADOS
              ================================================= -->
@@ -579,6 +556,10 @@
                 </div>
             </div>
 
+            <!-- BUSCADOR POR NOMBRE O USUARIO -->
+            <div class="search-container">
+                <input type="text" id="buscar-tecnico-listado" placeholder="Buscar por nombre o usuario...">
+            </div>
 
             <div class="technician-list">
 
@@ -604,8 +585,7 @@
 
                 </div>
 
-
-                <!-- PAGINACIÓN: 15 TÉCNICOS POR PÁGINA -->
+                <!-- PAGINACIÓN: 10 TÉCNICOS POR PÁGINA -->
                 <div id="technicians-pagination"
                     class="pagination-container">
 
@@ -631,13 +611,13 @@
 
         </section>
 
-
         <!-- =================================================
              5. GESTIÓN DE TÉCNICOS
              ================================================= -->
-        <section class="dashboard-content"
-            id="technician-management-section" hidden>
 
+             <section class="dashboard-content"
+              id="technician-management-section" hidden>
+              
             <div class="module-header">
 
                 <div>
@@ -650,7 +630,6 @@
                 </button>
 
             </div>
-
 
             <!-- FORMULARIO DE CREACIÓN Y EDICIÓN -->
             <div id="technician-form-container" hidden>
@@ -677,7 +656,6 @@
 
                     </div>
 
-
                     <div class="form-group">
                         <label for="technician-username">
                             Nombre de usuario
@@ -696,7 +674,6 @@
                         <input type="text" id="technician-cedula" name="technician-cedula" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Ej: 0922770516" required />
                     </div>
 
-
                     <div class="form-group">
 
                         <label for="technician-area">Área</label>
@@ -714,7 +691,6 @@
 
                     </div>
 
-
                     <div class="technician-form-actions">
 
                         <button type="submit" id="save-technician-button">
@@ -730,47 +706,4 @@
                     <p id="technician-message"
                         class="form-message"></p>
 
-                </form>
-
-            </div>
-
-
-            <!-- TABLA DE GESTIÓN DE TÉCNICOS -->
-            <div class="technician-list">
-
-                <h3>Administrar técnicos</h3>
-
-                <div class="table-container">
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre completo</th>
-                                <th>Usuario</th>
-                                <th>Área</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="technicians-table-body">
-                            <tr>
-                                <td colspan="5">Cargando técnicos...</td>
-                            </tr>
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- JAVASCRIPT PRINCIPAL -->
-
-</body>
-</html>
+                </
