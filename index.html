@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sistema de control y registro de horas extras del personal técnico.">
     <title>Control de Horas Extras</title>
+  <script type="module" crossorigin src="/control-horas-extras/assets/index-Bq2qF-Lq.js"></script>
   <link rel="stylesheet" crossorigin href="/control-horas-extras/assets/index-BSFbxui6.css">
 </head>
 
@@ -21,7 +22,7 @@
                 <p>Sistema de registro y seguimiento de horas extras del personal técnico.</p>
             </div>
 
-            <form id="login-form">
+            <form id="login-form" method="post">
 
                 <div class="form-group">
                     <label for="username">Usuario</label>
@@ -706,4 +707,19 @@
                     <p id="technician-message"
                         class="form-message"></p>
 
-                </
+                
+                    
+
+                </form>
+            </div>
+
+            <div id="technicians-management-pagination" class="pagination">
+                <button type="button" id="technicians-management-prev-page">Anterior</button>
+                <span id="technicians-management-page-info"></span>
+                <button type="button" id="technicians-management-next-page">Siguiente</button>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>
