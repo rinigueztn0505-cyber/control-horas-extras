@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sistema de control y registro de horas extras del personal técnico.">
     <title>Control de Horas Extras</title>
-  <script type="module" crossorigin src="/control-horas-extras/assets/index-BWClxhHI.js"></script>
+  <script type="module" crossorigin src="/control-horas-extras/assets/index-CZMs-Uxj.js"></script>
   <link rel="stylesheet" crossorigin href="/control-horas-extras/assets/index-BSFbxui6.css">
 </head>
 
@@ -33,8 +33,11 @@
 
                 <div class="form-group">
                     <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password"
-                        placeholder="Ingrese su contraseña" autocomplete="current-password" required>
+                    <div style="position:relative;">
+                        <input type="password" id="password" name="password"
+                            placeholder="Ingrese su contraseña" autocomplete="current-password" required style="width:100%; padding-right:40px;">
+                        <button type="button" id="toggle-login-password" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;" title="Mostrar contraseña">👁️</button>
+                    </div>
                 </div>
 
                 <button type="submit" id="login-button">Iniciar sesión</button>
