@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sistema de control y registro de horas extras del personal técnico.">
     <title>Control de Horas Extras</title>
-  <script type="module" crossorigin src="/control-horas-extras/assets/index-CZMs-Uxj.js"></script>
+  <script type="module" crossorigin src="/control-horas-extras/assets/index-DqYRrVY0.js"></script>
   <link rel="stylesheet" crossorigin href="/control-horas-extras/assets/index-BSFbxui6.css">
 </head>
 
@@ -679,11 +679,9 @@
 
 
                     <div class="form-group">
-
                         <label for="technician-username">
                             Nombre de usuario
                         </label>
-
                         <input type="text"
                             id="technician-username"
                             name="usuario"
@@ -692,7 +690,10 @@
                             minlength="3"
                             maxlength="30"
                             pattern="[a-zA-Z0-9._-]+">
-
+                    </div>
+                    <div class="form-group">
+                        <label for="technician-cedula">Cédula *</label>
+                        <input type="text" id="technician-cedula" name="technician-cedula" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Ej: 0922770516" required />
                     </div>
 
 
@@ -707,6 +708,7 @@
                             <option value="">Seleccione un área</option>
                             <option value="Radio">Radio</option>
                             <option value="WiFi">WiFi</option>
+                            <option value="Ambas">Ambas</option>
 
                         </select>
 
