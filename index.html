@@ -707,11 +707,26 @@
                     <p id="technician-message"
                         class="form-message"></p>
 
-                
-                    
-
                 </form>
             </div>
+
+            <!-- TABLA DE GESTIÓN -->
+            <div class="form-group">
+                <input type="text" id="buscar-tecnico-gestion" placeholder="Buscar por nombre o usuario">
+            </div>
+
+            <table class="technicians-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Cédula</th>
+                        <th>Área</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="technicians-table-body"></tbody>
+            </table>
 
             <div id="technicians-management-pagination" class="pagination">
                 <button type="button" id="technicians-management-prev-page">Anterior</button>
