@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sistema de control y registro de horas extras del personal técnico.">
     <title>Control de Horas Extras</title>
-  <script type="module" crossorigin src="/control-horas-extras/assets/index-DIYXdjbE.js"></script>
+  <script type="module" crossorigin src="/control-horas-extras/assets/index-5eO3-E0O.js"></script>
   <link rel="stylesheet" crossorigin href="/control-horas-extras/assets/index-BSFbxui6.css">
 </head>
 
@@ -547,9 +547,7 @@
         <!-- =================================================
              4. TÉCNICOS REGISTRADOS
              ================================================= -->
-        <section class="dashboard-content"
-            id="technicians-list-section" hidden>
-
+        <section class="dashboard-content" id="technicians-list-section" hidden>
             <div class="module-header">
                 <div>
                     <h2>Técnicos registrados</h2>
@@ -558,59 +556,34 @@
             </div>
 
             <!-- BUSCADOR POR NOMBRE O USUARIO -->
-            <div class="search-container">
-                <input type="text" id="buscar-tecnico-listado" placeholder="Buscar por nombre o usuario...">
-            </div>
-
-            <div class="technician-list">
-
-                <div class="table-container">
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Usuario</th>
-                                <th>Cédula</th>
-                                <th>Área</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="technicians-table-body"></tbody>
-                            <tr>
-                                <td colspan="4">Cargando técnicos...</td>
-                            </tr>
-                        </tbody>
-
-                    </table>
-
+                <div class="search-container">
+                    <input type="text" id="buscar-tecnico-listado" placeholder="Buscar por nombre o usuario...">
                 </div>
+
+                <div class="technician-list">
+                    <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Usuario</th>
+                                        <th>Área</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="technicians-list-table-body">
+                                    <tr><td colspan="4">Cargando técnicos...</td></tr>
+                                </tbody>
+                            </table>
+                    </div>
 
                 <!-- PAGINACIÓN: 10 TÉCNICOS POR PÁGINA -->
-                <div id="technicians-pagination"
-                    class="pagination-container">
-
-                    <button type="button"
-                        id="technicians-prev-page"
-                        disabled>
-                        Anterior
-                    </button>
-
-                    <span id="technicians-page-info">
-                        Página 1
-                    </span>
-
-                    <button type="button"
-                        id="technicians-next-page"
-                        disabled>
-                        Siguiente
-                    </button>
-
+                <div id="technicians-pagination" class="pagination-container">
+                    <button type="button" id="technicians-prev-page" disabled>Anterior</button>
+                    <span id="technicians-page-info">Página 1</span>
+                    <button type="button" id="technicians-next-page" disabled>Siguiente</button>
                 </div>
-
             </div>
-
         </section>
 
         <!-- =================================================
@@ -712,22 +685,26 @@
             </div>
 
             <!-- TABLA DE GESTIÓN -->
+                        <!-- TABLA DE GESTIÓN -->
             <div class="form-group">
-                <input type="text" id="buscar-tecnico-gestion" placeholder="Buscar por nombre o usuario">
+                <input type="text" id="buscar-tecnico-gestion" placeholder="Buscar por nombre, usuario o cédula">
             </div>
 
-            <table class="technicians-table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Usuario</th>
-                        <th>Cédula</th>
-                        <th>Área</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="technicians-table-body"></tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Cédula</th>
+                            <th>Área</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="technicians-table-body"></tbody>
+                </table>
+            </div>
 
             <div id="technicians-management-pagination" class="pagination">
                 <button type="button" id="technicians-management-prev-page">Anterior</button>
